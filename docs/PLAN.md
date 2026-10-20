@@ -8,10 +8,10 @@ Prazo: 5 dias corridos. Data de referência dos dados: 15/10/2026.
 | Dia | Entrega | Estado |
 |---|---|---|
 | 1 | Monorepo pnpm, contratos Zod compartilhados, regras de domínio (pipeline, motivo de perda, atenção 2 dias) com testes | feito (`537810d`) |
-| 2 | Migration Postgres, seed das 7 oportunidades (valores de origem preservados + correções explícitas) e seed sintético determinístico; API Fastify: erros Problem Details, repositório, serviço transacional | seed feito (`34e1508`); serviço em `07fb9ab` (WIP) |
-| 3 | API completa (rotas, job de follow-up com node-cron + endpoint manual) e front: board kanban com dnd-kit, update otimista com rollback. **Fim do dia 3: escopo congelado.** | em andamento |
-| 4 | Detalhe da oportunidade (histórico, contatos, brindes), lista de lembretes, filtros/busca na URL, estados de erro/carregamento | — |
-| 5 | README (execução, decisões, inconsistências do seed, limitações, uso de IA, os 3 problemas não implementados), build/teste limpos, revisão final | — |
+| 2 | Migration Postgres, seed das 7 oportunidades (valores de origem preservados + correções explícitas) e seed sintético determinístico; API Fastify: erros Problem Details, repositório, serviço transacional | feito |
+| 3 | API completa (rotas, job de follow-up com node-cron + endpoint manual) e front: board kanban com dnd-kit, update otimista com rollback. **Fim do dia 3: escopo congelado.** | feito |
+| 4 | Detalhe da oportunidade (histórico, contatos, brindes), lista de lembretes, filtros/busca na URL, estados de erro/carregamento | feito |
+| 5 | README (execução, decisões, inconsistências do seed, limitações, uso de IA, os 3 problemas não implementados), build/teste limpos, revisão final | feito (revisão final pendente) |
 
 ## 2. Arquitetura
 - `packages/contracts`: schemas Zod (fonte única dos tipos da API e do front).
@@ -19,10 +19,10 @@ Prazo: 5 dias corridos. Data de referência dos dados: 15/10/2026.
 - `apps/api` (Fastify + `fastify-type-provider-zod`, Postgres via `pg`, SQL explícito):
   - `db/` migrations SQL versionadas, seed do case e sintético.
   - `modules/opportunities` (repositório SQL + serviço com transação, `SELECT … FOR UPDATE`, checagem de versão, histórico de etapas na mesma transação).
-  - `modules/follow-up` (job node-cron diário + `POST /follow-up/run`; abre/resolve lembretes, idempotente).
+  - `modules/follow-up` (job node-cron a cada 15 min, configurável, + `POST /follow-up/run`; abre/resolve lembretes, idempotente).
   - `shared/errors.ts` (Problem Details RFC 9457: `code` em inglês, `title`/`detail` em pt-BR), `shared/clock.ts` (relógio injetável, fixável em 15/10/2026).
-- `apps/web` (React 19 + Vite, feature-based):
-  - `src/app` (providers, router, QueryClient), `src/shared` (api client, ui, formatação pt-BR).
+- `apps/web` (Next.js 16 App Router + React 19 + Tailwind 4, feature-based; o PDF pede Next.js, por isso saiu o Vite do rascunho inicial):
+  - `src/app` (rotas `/` e `/lembretes`, layout, providers, QueryClient), `src/shared` (api client, ui, formatação pt-BR).
   - `src/features/pipeline` (board, dnd-kit, mutação otimista com rollback), `src/features/opportunity-detail` (lazy + Suspense), `src/features/reminders`, `src/features/filters` (estado na URL, `useDeferredValue` na busca, `useTransition` na troca de filtro).
   - Estado: React Query para servidor, URL para filtros, estado local para UI. Sem Zustand.
 

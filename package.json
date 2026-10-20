@@ -13,7 +13,10 @@
     "dev:web": "pnpm --filter @nobre/web dev",
     "db:migrate": "pnpm --filter @nobre/api db:migrate",
     "db:seed": "pnpm --filter @nobre/api db:seed",
-    "db:seed:synthetic": "pnpm --filter @nobre/api db:seed -- --synthetic"
+    "db:seed:synthetic": "pnpm --filter @nobre/api db:seed -- --synthetic",
+    "start:api": "pnpm --filter @nobre/api start",
+    "start:web": "pnpm --filter @nobre/web start",
+    "follow-up:run": "pnpm --filter @nobre/api follow-up:run"
   },
   "devDependencies": {
     "typescript": "~5.9.3"
