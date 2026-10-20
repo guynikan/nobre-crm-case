@@ -250,3 +250,25 @@ export async function sellerExists(db: DbClient, sellerId: string): Promise<bool
   const { rowCount } = await db.query("SELECT 1 FROM sellers WHERE id = $1", [sellerId]);
   return (rowCount ?? 0) > 0;
 }
+
+export interface ContactRow {
+  id: string;
+  opportunity_id: string;
+  contacted_on: CalendarDate;
+  note: string | null;
+  created_at: Date;
+}
+
+export async function listContacts(db: DbClient, opportunityId: string): Promise<ContactRow[]> {
+  const { rows } = await db.query<ContactRow>(
+    `SELECT id, opportunity_id, contacted_on, note, created_at
+     FROM contacts WHERE opportunity_id = $1 ORDER BY contacted_on DESC, created_at DESC`,
+    [opportunityId],
+  );
+  return rows;
+}
+
+export async function listSellers(db: DbClient): Promise<{ id: string; name: string }[]> {
+  const { rows } = await db.query<{ id: string; name: string }>("SELECT id, name FROM sellers ORDER BY name");
+  return rows;
+}

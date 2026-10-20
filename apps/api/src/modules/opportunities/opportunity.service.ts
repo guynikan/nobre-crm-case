@@ -1,4 +1,5 @@
 import type {
+  Contact,
   CreateOpportunityBody,
   Opportunity,
   OpportunityPage,
@@ -172,6 +173,18 @@ export function createOpportunityService({ db, clock, attentionThresholdDays }: 
         lostReason: row.lost_reason,
         source: row.source,
         changedAt: row.changed_at.toISOString(),
+      }));
+    },
+
+    async contacts(id: string): Promise<Contact[]> {
+      if (!(await repo.findOpportunity(db, id))) throw new AppError("NOT_FOUND");
+      const rows = await repo.listContacts(db, id);
+      return rows.map((row) => ({
+        id: row.id,
+        opportunityId: row.opportunity_id,
+        contactedOn: row.contacted_on,
+        note: row.note,
+        createdAt: row.created_at.toISOString(),
       }));
     },
 
