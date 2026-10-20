@@ -27,13 +27,13 @@ Prazo: 5 dias corridos. Data de referência dos dados: 15/10/2026.
   - Estado: React Query para servidor, URL para filtros, estado local para UI. Sem Zustand.
 
 ## 3. Contratos e regras principais
-- Etapas: Lead → Orçamento → Negociação → Fechamento | Perdida. Fechamento e Perdida são finais.
+- Etapas (`STAGES`): `FIRST_CONTACT` → `QUOTE_PRESENTATION` → `FOLLOW_UP` → `FORECAST` → `CLOSING` | `LOST` (rótulos pt-BR no front). `CLOSING` e `LOST` são finais; avanço exige valor estimado e itens nas etapas que pedem.
 - `POST /opportunities/:id/stage` com `{ toStage, expectedVersion, lostReason? }`; Perdida exige motivo; conflito de versão → 409.
 - `POST /opportunities/:id/contacts` (`contactedOn` não pode ser futuro; oportunidade final não aceita contato).
 - `GET /opportunities` paginado, filtros por vendedor, etapa, atenção e busca.
 - Atenção: oportunidade não final sem contato registrado ou com ≥ 2 dias sem contato.
 - Brindes: `{ name, quantity }`.
-- Erros: Problem Details com `code` (`VALIDATION_FAILED`, `NOT_FOUND`, `VERSION_CONFLICT`, `OPPORTUNITY_IS_FINAL`, …).
+- Erros: Problem Details com `code` (`VALIDATION_FAILED`, `NOT_FOUND`, `VERSION_CONFLICT`, `TRANSITION_NOT_ALLOWED`, `STAGE_IS_FINAL`, `LOST_REASON_REQUIRED`, `CONTACT_IN_FUTURE`, … — lista em `packages/contracts/src/problem.ts`).
 - Seed: valores de origem preservados; cada exceção (ex.: OPP-2007 Perdida sem motivo) recebe tratamento explícito registrado, sem afrouxar as regras novas.
 
 ## 4. Critérios de entrega
