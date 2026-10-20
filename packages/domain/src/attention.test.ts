@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Stage } from "@nobre/contracts";
-import { evaluateAttention } from "./attention.js";
+import { evaluateAttention } from "./attention";
 
 const REFERENCE_DATE = "2026-10-15";
 

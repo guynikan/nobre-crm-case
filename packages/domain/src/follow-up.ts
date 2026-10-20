@@ -1,5 +1,5 @@
 import { isFinalStage, type AttentionReason, type CalendarDate, type Stage } from "@nobre/contracts";
-import { evaluateAttention } from "./attention.js";
+import { evaluateAttention } from "./attention";
 
 export interface FollowUpCandidate {
   opportunityId: string;

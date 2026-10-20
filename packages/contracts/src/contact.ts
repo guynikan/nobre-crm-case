@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { calendarDateSchema, idSchema } from "./common.js";
+import { calendarDateSchema, idSchema } from "./common";
 
 /** Registers a contact with the lead; it updates lastContactOn and resolves open reminders. */
 export const registerContactBodySchema = z.object({

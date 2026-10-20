@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { idSchema } from "./common.js";
-import { stageSchema } from "./stage.js";
+import { idSchema } from "./common";
+import { stageSchema } from "./stage";
 
 export const stageTransitionBodySchema = z.object({
   toStage: stageSchema,

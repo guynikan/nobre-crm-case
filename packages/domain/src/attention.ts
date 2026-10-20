@@ -1,5 +1,5 @@
 import { isFinalStage, type Attention, type CalendarDate, type Stage } from "@nobre/contracts";
-import { daysBetween } from "./calendar-date.js";
+import { daysBetween } from "./calendar-date";
 
 /** Business rule set by the product owner: 2 or more days without contact needs attention. */
 export const DEFAULT_ATTENTION_THRESHOLD_DAYS = 2;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { STAGES, type Stage } from "@nobre/contracts";
-import { evaluateQuoteInvariant, evaluateTransition, reachableStages } from "./pipeline.js";
+import { evaluateQuoteInvariant, evaluateTransition, reachableStages } from "./pipeline";
 
 const quoted: { estimatedValueCents: number | null; itemCount: number } = {
   estimatedValueCents: 450_000,

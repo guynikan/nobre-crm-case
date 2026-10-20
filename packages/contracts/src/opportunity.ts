@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { calendarDateSchema, idSchema, pageOf, pageQuerySchema, queryBooleanSchema } from "./common.js";
-import { stageSchema } from "./stage.js";
+import { calendarDateSchema, idSchema, pageOf, pageQuerySchema, queryBooleanSchema } from "./common";
+import { stageSchema } from "./stage";
 
 export const giftItemInputSchema = z.object({
   name: z.string().trim().min(1).max(120),

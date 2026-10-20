@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { planFollowUp, type FollowUpCandidate } from "./follow-up.js";
+import { planFollowUp, type FollowUpCandidate } from "./follow-up";
 
 const TODAY = "2026-10-15";
 const THRESHOLD = 2;

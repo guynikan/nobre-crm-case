@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { calendarDateSchema, idSchema } from "./common.js";
-import { attentionReasonSchema } from "./opportunity.js";
+import { calendarDateSchema, idSchema } from "./common";
+import { attentionReasonSchema } from "./opportunity";
 
 export const reminderStatusSchema = z.enum(["OPEN", "RESOLVED"]);
 export type ReminderStatus = z.infer<typeof reminderStatusSchema>;

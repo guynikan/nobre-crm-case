@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { calendarDateSchema } from "./common.js";
+import { calendarDateSchema } from "./common";
 
 /** Business context the UI needs to render dates and defaults consistently with the API. */
 export const appMetaSchema = z.object({

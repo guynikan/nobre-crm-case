@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { idSchema } from "./common.js";
+import { idSchema } from "./common";
 
 export const sellerSchema = z.object({
   id: idSchema,

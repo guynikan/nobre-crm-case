@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, calendarDateIn, daysBetween } from "./calendar-date.js";
+import { addDays, calendarDateIn, daysBetween } from "./calendar-date";
 
 describe("calendar dates", () => {
   it("counts days and adds days", () => {
