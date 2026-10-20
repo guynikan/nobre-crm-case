@@ -1,0 +1,21 @@
+{
+  "name": "nobre-crm-case",
+  "private": true,
+  "packageManager": "pnpm@8.15.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "dev:api": "pnpm --filter @nobre/api dev",
+    "dev:web": "pnpm --filter @nobre/web dev",
+    "db:migrate": "pnpm --filter @nobre/api db:migrate",
+    "db:seed": "pnpm --filter @nobre/api db:seed",
+    "db:seed:synthetic": "pnpm --filter @nobre/api db:seed -- --synthetic"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3"
+  }
+}
