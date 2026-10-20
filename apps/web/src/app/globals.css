@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  --color-paper: #f5f2ea;
+  --color-panel: #fffdf8;
+  --color-ink: #1d2420;
+  --color-muted: #66706a;
+  --color-line: #ddd6c6;
+  --color-nobre-900: #12352a;
+  --color-nobre-700: #1f5541;
+  --color-nobre-500: #2f7a5c;
+  --color-nobre-100: #dcebe3;
+  --color-alert-600: #b45309;
+  --color-alert-100: #fdf0d8;
+  --color-danger-600: #b42318;
+  --color-danger-100: #fde7e4;
+}
+
+@layer base {
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-nobre-500;
+  }
+}
+
+/* Subtle ruled-paper texture behind the board. */
+.board-surface {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 31px,
+    rgb(29 36 32 / 0.035) 31px,
+    rgb(29 36 32 / 0.035) 32px
+  );
+}
