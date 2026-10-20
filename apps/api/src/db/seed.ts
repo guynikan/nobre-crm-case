@@ -1,6 +1,4 @@
-import { loadConfig } from "../config.js";
-import { migrate } from "./migrate.js";
-import { createPool, withTransaction, type Db } from "./pool.js";
+import { withTransaction, type Db } from "./pool.js";
 import type pg from "pg";
 import {
   applyCorrections,
@@ -96,14 +94,4 @@ async function insertOpportunity(
       [opportunityId, row.lastContactOn, "Último contato informado na carga inicial"],
     );
   }
-}
-
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const config = loadConfig();
-  const db = createPool(config.databaseUrl);
-  const synthetic = process.argv.includes("--synthetic");
-  migrate(db)
-    .then(() => seed(db, { synthetic, referenceDate: config.businessToday ?? CASE_REFERENCE_DATE }))
-    .then((counts) => console.log(`seeded ${counts.case} case + ${counts.synthetic} synthetic opportunities`))
-    .finally(() => db.end());
 }

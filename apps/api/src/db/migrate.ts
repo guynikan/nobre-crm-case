@@ -1,8 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { loadConfig } from "../config.js";
-import { createPool, withTransaction, type Db } from "./pool.js";
+import { withTransaction, type Db } from "./pool.js";
 
 const MIGRATIONS_DIR = fileURLToPath(new URL("../../migrations", import.meta.url));
 
@@ -26,11 +25,4 @@ export async function migrate(db: Db, log: (message: string) => void = console.l
     });
     log(`applied ${file}`);
   }
-}
-
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const db = createPool(loadConfig().databaseUrl);
-  migrate(db)
-    .then(() => console.log("migrations up to date"))
-    .finally(() => db.end());
 }

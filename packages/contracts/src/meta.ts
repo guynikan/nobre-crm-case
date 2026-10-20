@@ -10,3 +10,9 @@ export const appMetaSchema = z.object({
   attentionThresholdDays: z.number().int(),
 });
 export type AppMeta = z.infer<typeof appMetaSchema>;
+
+export const healthSchema = z.object({
+  status: z.enum(["ok", "degraded"]),
+  database: z.enum(["up", "down"]),
+});
+export type Health = z.infer<typeof healthSchema>;
