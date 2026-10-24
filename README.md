@@ -80,9 +80,24 @@ A tabela em `CASE_OPPORTUNITIES_AS_GIVEN` permanece idêntica ao PDF; o deslocam
 - **Concorrência.** Toda escrita envia `expectedVersion`. O serviço faz `SELECT … FOR UPDATE` e compara a versão: se outra pessoa alterou antes, a resposta é `409 VERSION_CONFLICT` e o front desfaz o movimento.
 - **Erros.** Os erros seguem o padrão Problem Details (RFC 9457), com `code` estável em inglês e `title`/`detail` em pt-BR. A lista completa está em `packages/contracts/src/problem.ts`.
 
-### Atenção
+### Atenção e prioridade
 
 Uma oportunidade não final precisa de atenção quando está há 2 dias ou mais sem contato, ou quando não tem nenhum contato registrado. Os dias são corridos, porque o PDF não diz se são úteis, e o limite é configurável (`ATTENTION_THRESHOLD_DAYS`). A mesma função (`evaluateAttention`) roda na API e no front. Com isso, o update otimista mostra o mesmo resultado que o servidor vai devolver.
+
+Essa regra responde *se* uma oportunidade está vencida, e responde bem, mas não responde por onde começar. Na carga completa de 87 oportunidades ela sinaliza 59: um alerta que dispara em dois terços do quadro manda o vendedor decidir no olho justamente o que a ferramenta deveria decidir por ele. Por isso o que está vencido é ordenado por quatro portões (`attentionPriority`), avaliados na ordem, com o primeiro que casa vencendo:
+
+| Portão | Quando | Por quê |
+|---|---|---|
+| `UNTOUCHED` | nenhum contato registrado | ninguém começou a venda; é o problema 1 do enunciado |
+| `EVENT_IMMINENT` | evento do cliente em até 7 dias | data dura: sem prazo de produção, a venda morre |
+| `PROPOSAL_EXPIRED` | validade da proposta já passou | o mais recuperável dos três: um orçamento pode ser reemitido |
+| `OVERDUE_CONTACT` | só idade do último contato | o caso base |
+
+A ordem é de irrecuperabilidade, não de gravidade percebida: o critério é quanto da venda se perde deixando aquele caso para amanhã. Os três primeiros portões somam 21 oportunidades e o caso base fica com 38, o que devolve ao alerta a capacidade de significar alguma coisa. Os portões ignoram a etapa de propósito — uma oportunidade em Primeiro Contato sem nada vencendo é menos urgente que um Follow-up com evento depois de amanhã.
+
+**Os portões ordenam, nunca ampliam.** Uma oportunidade contatada hoje fica fora da lista mesmo com evento amanhã, porque alguém comprovadamente já está cuidando dela. Isso preserva o significado de `needsAttention` e, por tabela, o da automação de follow-up, que cria lembretes a partir dele.
+
+A prioridade é derivada a cada requisição e nunca persistida, então nenhuma migração acompanha a regra. Em compensação ela existe duas vezes: em TypeScript e espelhada em SQL, porque ordenação e paginação acontecem no banco — ordenar em TypeScript depois da consulta ordenaria apenas a página já trazida. `apps/api/test/attention-sql-mirror.test.ts` roda a expressão SQL real contra o banco de teste e compara, caso a caso, com a função de domínio, para que as duas não divirjam em silêncio.
 
 ### Automação: problema 4 (lembrar de dar retorno)
 
@@ -109,6 +124,16 @@ Uma oportunidade não final precisa de atenção quando está há 2 dias ou mais
 - `packages/domain`: transições, motivo de perda, invariante de orçamento, atenção, plano de follow-up e datas de calendário.
 - `apps/api/test/follow-up.test.ts` (integração com Postgres): lembretes do dia 15/10, idempotência sequencial e concorrente, encerramento por contato e por perda, contato antigo que mantém o lembrete, e o avanço de data para 17/10.
 
+### Lembrete é notificação, não uma seção
+
+Atenção é propriedade do funil no instante em que se olha, calculada a cada requisição. Lembrete é registro: nasce do job, tem `dueOn`, `status` e `resolvedAt`, e só se encerra por um fato de negócio. Quem organiza o trabalho é o quadro, que já ordena e colore por urgência; o lembrete serve para que algo criado enquanto ninguém olhava não passe despercebido. Isso é notificação, e uma aba de navegação prometeria um lugar onde se trabalha.
+
+Por isso os lembretes vivem num sino no cabeçalho, com a contagem de abertos sempre visível, abrindo um painel com os abertos, os encerrados e o disparo manual. Não há rota separada: o funil é a única tela. Cada linha do painel mostra o portão que a colocou ali ("Evento em 2 dias", "Proposta vencida há 6 dias"), e não a contagem de dias — mostrar os dias contradiria a ordem na tela, já que a lista é ordenada por prazo e não por silêncio. Com a sequência se explicando sozinha, sair dela vira escolha informada: a fila não é imposta, porque o vendedor sabe coisas que o funil não sabe.
+
+Um lembrete novo chega como toast e soma uma contagem ao título da aba, que é o que alcança quem está em outra aba do navegador. A contagem some ao abrir o painel, não ao voltar o foco para a aba — zerar no retorno esconderia justamente o aviso levantado. Ela é derivada do que está aberto e ainda não visto, nunca acumulada, então um lembrete que o job encerrar antes de alguém olhar deixa de ser anunciado.
+
+Notificação normalmente exige identidade, e o enunciado dispensa autenticação. Aqui isso não é obstáculo: o lembrete não tem estado de leitura por usuário, é aberto ou encerrado, e quem o encerra é a regra.
+
 ### Outras decisões
 
 - **Contratos Zod compartilhados.** O mesmo schema valida a requisição na API, gera o OpenAPI (`/docs`) e valida a resposta no front.
@@ -119,6 +144,8 @@ Uma oportunidade não final precisa de atenção quando está há 2 dias ou mais
   - `lazy` + `Suspense` no drawer de detalhe, que só é baixado quando alguém abre uma oportunidade.
 - **Dinheiro em centavos** (inteiro) e **datas de calendário como `YYYY-MM-DD`**, sem fuso: "último contato" é um dia, não um instante.
 - **Busca no backend.** O quadro pede até 500 oportunidades por vez, o que basta para o volume de um time. A paginação já existe no contrato para quando isso deixar de bastar.
+- **Rolagem do quadro.** Quando as colunas não cabem, o quadro rola na horizontal em vez de encolhê-las, que é o padrão de kanban e mantém o card legível. Para que ninguém perca as etapas escondidas, as bordas recebem um gradiente que aparece só do lado que ainda esconde conteúdo (`shared/ui/scroll-fade.tsx`). Ele é decorativo (`aria-hidden`, sem captura de ponteiro), então não interfere no arrasto nem em leitores de tela.
+- **Sem onboarding.** Não há tour nem modal de boas-vindas. O critério do enunciado é o vendedor encontrar rápido o que trabalhar hoje, e se o quadro precisasse de um tour o problema estaria no quadro. A orientação fica onde a dúvida aparece: o painel de lembretes explica a regra que gerou a lista, os estados vazios dizem a causa e não só a ausência, o card diz em palavras por que exige atenção, e um destino inválido no arrasto é recusado com a lista das etapas alcançáveis.
 
 ## Inconsistências da carga inicial e como foram tratadas
 
@@ -196,6 +223,20 @@ Campos em branco viram `null`, nunca um valor inventado.
   - Busca por texto no Postgres (`tsvector`).
   - Exibição na linha do tempo junto com os contatos.
 
+## Como o trabalho foi conduzido
+
+A implementação foi feita em camadas, de dentro para fora, para que as regras de negócio ficassem independentes de HTTP, SQL e interface:
+
+1. Contratos compartilhados e regras puras de domínio.
+2. Schema PostgreSQL, carga do case e carga sintética determinística.
+3. API Fastify, mudanças transacionais e automação de follow-up.
+4. Interface Next.js organizada por feature.
+5. Documentação e verificações finais.
+
+Com isso, transições de etapa, cálculo de atenção, prioridade e planejamento de lembretes podem ser testados sem subir a aplicação. As três verificações do repositório — `pnpm typecheck`, `pnpm test` e `pnpm build` — passam no estado final: 60 testes de domínio e 20 de integração contra PostgreSQL, entre follow-up e o espelho SQL da prioridade.
+
+As verificações manuais da interface cobriram arrastar e soltar, rollback depois de um `409`, diálogo de motivo de perda, filtros na URL, encerramento de lembrete por contato, execução manual do follow-up e a chegada de um lembrete novo como toast e contagem no título. Elas complementam, e não substituem, os testes automatizados das regras críticas.
+
 ## Uso de IA
 
 O código foi escrito com assistência de IA (Claude Code, com o modelo Claude Opus). Eu defini as decisões técnicas e de produto antes de cada etapa: stack, regras de retorno de etapa, problema escolhido, idempotência, tratamento das inconsistências e arquitetura feature-based. A IA implementou a partir delas, e eu revisei. As regras críticas têm testes automatizados, e a interface foi testada manualmente contra a API e o Postgres locais.
@@ -209,5 +250,4 @@ apps/
 packages/
   contracts/  schemas Zod compartilhados (requisição, resposta, erros)
   domain/     regras puras: transições, atenção, plano de follow-up, datas
-docs/PLAN.md  plano de execução
 ```
