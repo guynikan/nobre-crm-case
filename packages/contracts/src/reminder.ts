@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { calendarDateSchema, idSchema } from "./common";
-import { attentionReasonSchema } from "./opportunity";
+import { attentionPrioritySchema, attentionReasonSchema } from "./opportunity";
 
 export const reminderStatusSchema = z.enum(["OPEN", "RESOLVED"]);
 export type ReminderStatus = z.infer<typeof reminderStatusSchema>;
@@ -13,6 +13,10 @@ export const reminderSchema = z.object({
   sellerName: z.string().nullable(),
   reason: attentionReasonSchema,
   daysSinceLastContact: z.number().int().nullable(),
+  /** Why this one comes before the next, derived from the opportunity at list time. */
+  priority: attentionPrioritySchema.nullable(),
+  proposalValidUntil: calendarDateSchema.nullable(),
+  eventDate: calendarDateSchema.nullable(),
   /** The day the reminder was raised for (the business "today" of the run). */
   dueOn: calendarDateSchema,
   status: reminderStatusSchema,

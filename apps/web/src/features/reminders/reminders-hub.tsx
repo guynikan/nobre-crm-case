@@ -1,6 +1,7 @@
 "use client";
 
-import type { Reminder, ReminderStatus } from "@nobre/contracts";
+import type { CalendarDate, Reminder, ReminderStatus } from "@nobre/contracts";
+import { daysBetween } from "@nobre/domain";
 import Link from "next/link";
 import { useState } from "react";
 import { errorMessage } from "@/shared/api/client";
@@ -8,6 +9,7 @@ import { formatDate, formatDateTime } from "@/shared/format";
 import { Button } from "@/shared/ui/fields";
 import { EmptyState, ErrorState, Skeleton } from "@/shared/ui/states";
 import { useToast } from "@/shared/ui/toast";
+import { useMeta } from "@/shared/api/queries";
 import { useReminders, useRunFollowUp } from "./queries";
 
 /**
@@ -18,6 +20,7 @@ import { useReminders, useRunFollowUp } from "./queries";
 export function RemindersHub({ onNavigate }: { onNavigate: () => void }) {
   const [status, setStatus] = useState<ReminderStatus>("OPEN");
   const reminders = useReminders(status);
+  const meta = useMeta();
   const run = useRunFollowUp();
   const toast = useToast();
 
@@ -39,7 +42,7 @@ export function RemindersHub({ onNavigate }: { onNavigate: () => void }) {
           <h2 className="text-sm font-semibold">Follow-up</h2>
           <p className="text-xs text-muted">
             {status === "OPEN"
-              ? "Retome o contato de cima para baixo: a ordem é a do risco de perder a venda."
+              ? "Retome o contato com quem está esperando."
               : "Encerrados quando o contato foi registrado ou a venda terminou."}
           </p>
         </div>
@@ -89,7 +92,12 @@ export function RemindersHub({ onNavigate }: { onNavigate: () => void }) {
                     <span className="mr-2 font-mono text-xs text-muted">{reminder.opportunityCode}</span>
                     {reminder.companyName}
                   </p>
-                  <p className="text-xs text-muted">{describe(reminder)}</p>
+                  {meta.data ? (
+                    <p className="text-xs">
+                      <span className="font-medium text-alert-600">{why(reminder, meta.data.today)}</span>
+                      <span className="text-muted"> · {describe(reminder)}</span>
+                    </p>
+                  ) : null}
                 </Link>
               </li>
             ))}
@@ -100,15 +108,40 @@ export function RemindersHub({ onNavigate }: { onNavigate: () => void }) {
   );
 }
 
+/**
+ * The reason this reminder sits where it sits. Showing the day count instead would
+ * contradict the order on screen, since the list is ranked by deadline, not by silence.
+ */
+function why(reminder: Reminder, today: CalendarDate): string {
+  const days = (date: CalendarDate) => Math.abs(daysBetween(today, date));
+  const plural = (count: number, one: string, many: string) => (count === 1 ? one : many);
+
+  switch (reminder.priority) {
+    case "UNTOUCHED":
+      return "Nunca contatado";
+    case "EVENT_IMMINENT": {
+      if (!reminder.eventDate) return "Evento próximo";
+      const left = daysBetween(today, reminder.eventDate);
+      if (left === 0) return "Evento hoje";
+      return `Evento em ${left} ${plural(left, "dia", "dias")}`;
+    }
+    case "PROPOSAL_EXPIRED": {
+      if (!reminder.proposalValidUntil) return "Proposta vencida";
+      const ago = days(reminder.proposalValidUntil);
+      return `Proposta vencida há ${ago} ${plural(ago, "dia", "dias")}`;
+    }
+    default:
+      return reminder.reason === "NO_CONTACT_RECORDED"
+        ? "Nenhum contato registrado"
+        : `${reminder.daysSinceLastContact} dias sem contato`;
+  }
+}
+
 function describe(reminder: Reminder): string {
-  const why =
-    reminder.reason === "NO_CONTACT_RECORDED"
-      ? "Nenhum contato registrado"
-      : `${reminder.daysSinceLastContact} dias sem contato`;
   const who = reminder.sellerName ?? "sem vendedor";
   const when =
     reminder.status === "OPEN"
       ? `aberto em ${formatDate(reminder.dueOn)}`
       : `encerrado em ${reminder.resolvedAt ? formatDateTime(reminder.resolvedAt) : "—"}`;
-  return `${why} · ${who} · ${when}`;
+  return `${who} · ${when}`;
 }

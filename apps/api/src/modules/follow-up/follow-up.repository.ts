@@ -14,6 +14,10 @@ export interface ReminderRow {
   reason: AttentionReason;
   days_since_last_contact: number | null;
   due_on: CalendarDate;
+  stage: Stage;
+  last_contact_on: CalendarDate | null;
+  proposal_valid_until: CalendarDate | null;
+  event_date: CalendarDate | null;
   created_at: Date;
   resolved_at: Date | null;
 }
@@ -79,7 +83,8 @@ export async function countOpenReminders(db: DbClient): Promise<number> {
 
 const SELECT_REMINDER = `
   SELECT r.id, r.opportunity_id, o.code AS opportunity_code, o.company_name, s.name AS seller_name,
-         r.reason, r.days_since_last_contact, r.due_on, r.created_at, r.resolved_at
+         r.reason, r.days_since_last_contact, r.due_on, r.created_at, r.resolved_at,
+         o.stage, o.last_contact_on, o.proposal_valid_until, o.event_date
   FROM follow_up_reminders r
   JOIN opportunities o ON o.id = r.opportunity_id
   LEFT JOIN sellers s ON s.id = o.seller_id`;

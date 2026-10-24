@@ -1,5 +1,6 @@
 import type { FollowUpRunResult, Reminder, ReminderStatus } from "@nobre/contracts";
-import { DEFAULT_EVENT_HORIZON_DAYS, planFollowUp } from "@nobre/domain";
+import { attentionPriority, DEFAULT_EVENT_HORIZON_DAYS, planFollowUp } from "@nobre/domain";
+import type { AttentionContext } from "../../shared/attention-sql.js";
 import { withTransaction, type Db } from "../../db/pool.js";
 import type { Clock } from "../../shared/clock.js";
 import * as repo from "./follow-up.repository.js";
@@ -18,7 +19,7 @@ const RUN_LOCK_KEY = 4_815_162_342;
 
 export type FollowUpService = ReturnType<typeof createFollowUpService>;
 
-export function toReminder(row: repo.ReminderRow): Reminder {
+export function toReminder(row: repo.ReminderRow, attention: AttentionContext): Reminder {
   return {
     id: row.id,
     opportunityId: row.opportunity_id,
@@ -27,6 +28,18 @@ export function toReminder(row: repo.ReminderRow): Reminder {
     sellerName: row.seller_name,
     reason: row.reason,
     daysSinceLastContact: row.days_since_last_contact,
+    priority: attentionPriority(
+      {
+        stage: row.stage,
+        lastContactOn: row.last_contact_on,
+        proposalValidUntil: row.proposal_valid_until,
+        eventDate: row.event_date,
+      },
+      attention.today,
+      { thresholdDays: attention.thresholdDays, eventHorizonDays: attention.eventHorizonDays },
+    ),
+    proposalValidUntil: row.proposal_valid_until,
+    eventDate: row.event_date,
     dueOn: row.due_on,
     status: row.resolved_at ? "RESOLVED" : "OPEN",
     createdAt: row.created_at.toISOString(),
@@ -79,7 +92,7 @@ export function createFollowUpService({ db, clock, attentionThresholdDays, notif
       log?.info(result, "follow-up run finished");
       if (notify && createdIds.length > 0) {
         try {
-          await notify((await repo.listRemindersByIds(db, createdIds)).map(toReminder));
+          await notify((await repo.listRemindersByIds(db, createdIds)).map((row) => toReminder(row, attentionContext())));
           await repo.markNotified(db, createdIds, clock.now());
         } catch (error) {
           log?.error({ err: error }, "follow-up notification failed; reminders stay visible in the CRM");
@@ -89,7 +102,8 @@ export function createFollowUpService({ db, clock, attentionThresholdDays, notif
     },
 
     async list(filters: { status: ReminderStatus; sellerId?: string | undefined }): Promise<Reminder[]> {
-      return (await repo.listReminders(db, filters, attentionContext())).map(toReminder);
+      const context = attentionContext();
+      return (await repo.listReminders(db, filters, context)).map((row) => toReminder(row, context));
     },
   };
 }
