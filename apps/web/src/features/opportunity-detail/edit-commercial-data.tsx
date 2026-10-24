@@ -14,7 +14,10 @@ interface ItemDraft {
   quantity: string;
 }
 
-/** Value and gift items: what a lead needs before it can get a quote. */
+/**
+ * What the funnel rules read: the value and items a quote needs, and the two dates the
+ * urgency gates key off. A reissued quote or a rescheduled event has to land somewhere.
+ */
 export function EditCommercialData({ opportunity }: { opportunity: Opportunity }) {
   const update = useUpdateOpportunity(opportunity.id);
   const toast = useToast();
@@ -25,12 +28,14 @@ export function EditCommercialData({ opportunity }: { opportunity: Opportunity }
   const [items, setItems] = useState<ItemDraft[]>(
     opportunity.items.map((item, key) => ({ key, name: item.name, quantity: String(item.quantity) })),
   );
+  const [proposalValidUntil, setProposalValidUntil] = useState(opportunity.proposalValidUntil ?? "");
+  const [eventDate, setEventDate] = useState(opportunity.eventDate ?? "");
   const [error, setError] = useState<string | null>(null);
 
   if (!editing) {
     return (
       <Button variant="ghost" className="mt-3 -ml-3" onClick={() => setEditing(true)}>
-        Editar valor e itens
+        Editar dados comerciais
       </Button>
     );
   }
@@ -47,7 +52,13 @@ export function EditCommercialData({ opportunity }: { opportunity: Opportunity }
     }
     setError(null);
     update.mutate(
-      { expectedVersion: opportunity.version, estimatedValueCents: cents, items: parsedItems },
+      {
+        expectedVersion: opportunity.version,
+        estimatedValueCents: cents,
+        items: parsedItems,
+        proposalValidUntil: proposalValidUntil || null,
+        eventDate: eventDate || null,
+      },
       {
         onSuccess: () => toast.success("Dados atualizados"),
         onError: (failure) => setError(errorMessage(failure).title),
@@ -69,6 +80,32 @@ export function EditCommercialData({ opportunity }: { opportunity: Opportunity }
           onChange={(event) => setValue(event.target.value)}
           placeholder="4.500,00"
         />
+      </div>
+      <div className="flex gap-3">
+        <div className="flex-1">
+          <label htmlFor="proposal-valid-until" className="text-xs text-muted">
+            Validade da proposta
+          </label>
+          <input
+            id="proposal-valid-until"
+            type="date"
+            className={`${inputClass} w-full`}
+            value={proposalValidUntil}
+            onChange={(event) => setProposalValidUntil(event.target.value)}
+          />
+        </div>
+        <div className="flex-1">
+          <label htmlFor="event-date" className="text-xs text-muted">
+            Evento do cliente
+          </label>
+          <input
+            id="event-date"
+            type="date"
+            className={`${inputClass} w-full`}
+            value={eventDate}
+            onChange={(event) => setEventDate(event.target.value)}
+          />
+        </div>
       </div>
       <fieldset className="space-y-2">
         <legend className="text-xs text-muted">Itens de brinde</legend>

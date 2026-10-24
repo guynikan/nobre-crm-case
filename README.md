@@ -50,7 +50,7 @@ A tabela em `CASE_OPPORTUNITIES_AS_GIVEN` permanece idêntica ao PDF; o deslocam
 - **Funil (`/`):** Kanban com uma coluna por etapa e mais a coluna Perdida. Cada coluna mostra o total, a soma dos valores e quantas oportunidades precisam de atenção. O card mostra valor, brinde e quantidade, vendedor, dias sem contato e alertas de data (proposta vencida, evento passado ou nos próximos 7 dias). A faixa lateral do card distingue o que está só vencido do que tem prazo contra, e os cards saem ordenados pelos portões de urgência.
 - **Arrastar card:** enquanto você arrasta, as colunas permitidas ficam destacadas e as proibidas ficam apagadas. Soltar numa coluna proibida explica o porquê sem chamar a API. Soltar em Perdida abre um diálogo que exige o motivo. A mudança aparece na hora (update otimista). Se a API recusar, o card volta e uma mensagem em pt-BR diz o motivo. O teclado também funciona: espaço, setas e espaço.
 - **Busca e filtros:** empresa ou código, vendedor e, na visão de lista, etapa. Tudo fica na URL (`?q=pulso&view=list`), então um link compartilhado abre a mesma visão. Não há filtro de atenção: a urgência rege a ordem e a cor do quadro inteiro, em vez de ser um recorte opcional.
-- **Detalhe (drawer):** dados comerciais, itens, edição de valor e itens, registro de contato, botões das etapas permitidas (alternativa acessível ao arrasto) e histórico de etapas.
+- **Detalhe (drawer):** dados comerciais, itens, edição de valor, itens, validade da proposta e data do evento, registro de contato, botões das etapas permitidas (alternativa acessível ao arrasto) e histórico de etapas.
 - **Lembretes (sino no cabeçalho):** painel com os lembretes abertos e os encerrados, e o botão "Verificar agora". O sino mostra quantos estão abertos. Um lembrete novo chega como toast, e vira contagem no título da aba enquanto ninguém olha — não existe rota separada para isso.
 - **Estados:** esqueleto no carregamento, erro com "Tentar de novo", vazio com mensagem e indicador "Atualizando…" quando os dados anteriores continuam na tela.
 
@@ -168,6 +168,8 @@ Campos em branco viram `null`, nunca um valor inventado.
 
 - Sem autenticação nem perfis (o PDF não exige). Qualquer pessoa com acesso à API pode alterar qualquer oportunidade, e o histórico não registra quem fez a mudança.
 - Não há tela para criar oportunidade. A API tem `POST /opportunities`, mas o fluxo de entrada de leads ficou fora do escopo.
+- Trocar o vendedor de uma oportunidade e corrigir o nome da empresa só pela API. O `PATCH` aceita `sellerId` e `companyName`, mas a interface não expõe os dois; redistribuir carteira é operação de gestor, e sem autenticação não há a quem restringir.
+- O drawer e o painel do sino declaram semântica de diálogo mas não movem o foco ao abrir. Quem navega por leitor de tela continua no conteúdo de trás até chegar neles pelo Tab. O diálogo de motivo de perda usa `<dialog>` nativo e não tem esse problema.
 - Lembretes aparecem no CRM e, opcionalmente, num webhook. Não há e-mail nem push.
 - O quadro carrega até 500 oportunidades por filtro. Acima disso, seria preciso paginar por coluna.
 - Os testes automatizados cobrem as regras críticas e o follow-up. A interface foi verificada manualmente: arrastar, rollback em 409, Perdida com motivo, contato que encerra lembrete, filtros na URL e execução manual do follow-up.
