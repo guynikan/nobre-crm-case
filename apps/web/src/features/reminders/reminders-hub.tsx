@@ -11,6 +11,7 @@ import { EmptyState, ErrorState, Skeleton } from "@/shared/ui/states";
 import { useToast } from "@/shared/ui/toast";
 import { useMeta } from "@/shared/api/queries";
 import { useReminders, useRunFollowUp } from "./queries";
+import { useNextCheck } from "./use-next-check";
 
 /**
  * Everything the follow-up automation produces, in one panel: what is pending, what it
@@ -21,6 +22,7 @@ export function RemindersHub({ onNavigate }: { onNavigate: () => void }) {
   const [status, setStatus] = useState<ReminderStatus>("OPEN");
   const reminders = useReminders(status);
   const meta = useMeta();
+  const nextCheck = useNextCheck(meta.data?.followUpIntervalMinutes);
   const run = useRunFollowUp();
   const toast = useToast();
 
@@ -105,9 +107,9 @@ export function RemindersHub({ onNavigate }: { onNavigate: () => void }) {
         )}
       </div>
 
-      {meta.data?.followUpIntervalMinutes ? (
+      {nextCheck ? (
         <footer className="border-t border-line px-4 py-2 text-xs text-muted">
-          Verificado a cada {meta.data.followUpIntervalMinutes} minutos.
+          Próxima verificação em: <span className="font-mono text-ink">{nextCheck}</span>
         </footer>
       ) : null}
     </div>
