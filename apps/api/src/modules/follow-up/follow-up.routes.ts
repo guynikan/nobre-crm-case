@@ -9,7 +9,7 @@ export const followUpRoutes: FastifyPluginAsyncZod<{ service: FollowUpService }>
     {
       schema: {
         tags: ["follow-up"],
-        summary: "Follow-up reminders, longest silence first",
+        summary: "Follow-up reminders, ordered by urgency gate",
         querystring: reminderListQuerySchema,
         response: { 200: reminderListSchema, ...problemResponses(400) },
       },
