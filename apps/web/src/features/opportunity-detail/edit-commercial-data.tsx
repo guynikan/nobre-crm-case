@@ -6,7 +6,7 @@ import { errorMessage } from "@/shared/api/client";
 import { parseMoneyToCents } from "@/shared/format";
 import { Button, inputClass } from "@/shared/ui/fields";
 import { useToast } from "@/shared/ui/toast";
-import { useUpdateOpportunity } from "./api";
+import { useUpdateOpportunity } from "./queries";
 
 interface ItemDraft {
   key: number;

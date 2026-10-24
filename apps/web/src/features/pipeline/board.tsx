@@ -18,7 +18,7 @@ import { useMemo, useRef, useState } from "react";
 import { STAGE_LABELS } from "@/shared/format";
 import { ScrollFade } from "@/shared/ui/scroll-fade";
 import { useToast } from "@/shared/ui/toast";
-import { MOVE_STAGE_KEY, useMoveStage, type MoveStageInput } from "./api";
+import { MOVE_STAGE_KEY, useMoveStage, type MoveStageInput } from "./queries";
 import { BoardColumn, type DropState } from "./board-column";
 import { DraggableCard } from "./draggable-card";
 import { LostReasonDialog } from "./lost-reason-dialog";

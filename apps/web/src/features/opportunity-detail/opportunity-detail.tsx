@@ -9,10 +9,10 @@ import { attentionLabel, formatCents, formatDate, formatDateTime, formatQuantity
 import { ErrorBoundary } from "@/shared/ui/error-boundary";
 import { Button } from "@/shared/ui/fields";
 import { ErrorState, Skeleton } from "@/shared/ui/states";
-import { useMoveStage } from "../pipeline/api";
+import { useMoveStage } from "../pipeline/queries";
 import { LostReasonDialog } from "../pipeline/lost-reason-dialog";
 import { dateWarnings } from "../pipeline/opportunity-card";
-import { useOpportunityDetail } from "./api";
+import { useOpportunityDetail } from "./queries";
 import { ContactForm } from "./contact-form";
 import { DrawerShell } from "./detail-skeleton";
 import { EditCommercialData } from "./edit-commercial-data";

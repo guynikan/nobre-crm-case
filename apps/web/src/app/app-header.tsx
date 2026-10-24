@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMeta } from "@/shared/api/shared-queries";
+import { useMeta } from "@/shared/api/queries";
 import { formatDate } from "@/shared/format";
-import { useReminders } from "@/features/reminders/api";
+import { useReminders } from "@/features/reminders/queries";
 
 export function AppHeader() {
   const pathname = usePathname();

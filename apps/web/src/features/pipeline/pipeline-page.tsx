@@ -2,12 +2,12 @@
 
 import { lazy, Suspense, useDeferredValue } from "react";
 import { errorMessage } from "@/shared/api/client";
-import { useMeta } from "@/shared/api/shared-queries";
+import { useMeta } from "@/shared/api/queries";
 import { EmptyState, ErrorState, Skeleton, Spinner } from "@/shared/ui/states";
 import { FilterBar } from "../filters/filter-bar";
 import { useOpportunityFilters } from "../filters/use-opportunity-filters";
 import { DetailSkeleton } from "../opportunity-detail/detail-skeleton";
-import { BOARD_PAGE_SIZE, useOpportunityList } from "./api";
+import { BOARD_PAGE_SIZE, useOpportunityList } from "./queries";
 import { PipelineBoard } from "./board";
 import { OpportunityTable } from "./opportunity-table";
 

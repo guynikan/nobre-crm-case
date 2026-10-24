@@ -5,12 +5,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { errorMessage } from "@/shared/api/client";
-import { useMeta, useSellers } from "@/shared/api/shared-queries";
+import { useMeta, useSellers } from "@/shared/api/queries";
 import { formatDate, formatDateTime } from "@/shared/format";
 import { Button, inputClass } from "@/shared/ui/fields";
 import { EmptyState, ErrorState, Skeleton } from "@/shared/ui/states";
 import { useToast } from "@/shared/ui/toast";
-import { useReminders, useRunFollowUp } from "./api";
+import { useReminders, useRunFollowUp } from "./queries";
 
 export function RemindersPage() {
   const params = useSearchParams();

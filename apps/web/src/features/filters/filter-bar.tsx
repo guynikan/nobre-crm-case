@@ -2,7 +2,7 @@
 
 import { STAGES } from "@nobre/contracts";
 import { useEffect, useState } from "react";
-import { useSellers } from "@/shared/api/shared-queries";
+import { useSellers } from "@/shared/api/queries";
 import { STAGE_LABELS } from "@/shared/format";
 import { inputClass } from "@/shared/ui/fields";
 import type { BoardView, OpportunityFilters, UrlPatch } from "./use-opportunity-filters";

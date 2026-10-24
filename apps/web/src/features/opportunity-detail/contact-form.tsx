@@ -5,7 +5,7 @@ import { useState, type FormEvent } from "react";
 import { errorMessage } from "@/shared/api/client";
 import { Button, inputClass } from "@/shared/ui/fields";
 import { useToast } from "@/shared/ui/toast";
-import { useRegisterContact } from "./api";
+import { useRegisterContact } from "./queries";
 
 export function ContactForm({ opportunityId, today }: { opportunityId: string; today: CalendarDate }) {
   const register = useRegisterContact(opportunityId);

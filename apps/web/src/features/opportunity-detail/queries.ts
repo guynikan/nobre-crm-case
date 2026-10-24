@@ -10,7 +10,7 @@ import {
 import { useMutation, useQueryClient, useSuspenseQueries } from "@tanstack/react-query";
 import { apiRequest } from "@/shared/api/client";
 import { queryKeys } from "@/shared/api/query-keys";
-import { patchOpportunityCaches } from "../pipeline/api";
+import { patchOpportunityCaches } from "../pipeline/queries";
 
 /** Opportunity, stage history and contacts load in parallel and suspend together. */
 export function useOpportunityDetail(id: string) {
