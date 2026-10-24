@@ -106,6 +106,9 @@ export function createOpportunityService({ db, clock, attentionThresholdDays }: 
 
     async create(body: CreateOpportunityBody): Promise<Opportunity> {
       const data = createOpportunityBodySchema.parse(body);
+      if (data.lastContactOn && daysBetween(clock.today(), data.lastContactOn) > 0) {
+        throw new AppError("CONTACT_IN_FUTURE");
+      }
       return withTransaction(db, async (client) => {
         await assertSeller(client, data.sellerId);
         const id = await repo.insertOpportunity(client, data);
@@ -117,6 +120,9 @@ export function createOpportunityService({ db, clock, attentionThresholdDays }: 
           lostReason: null,
           source: "USER",
         });
+        if (data.lastContactOn) {
+          await repo.insertContact(client, id, data.lastContactOn, "Contato informado no cadastro");
+        }
         return load(client, id);
       });
     },

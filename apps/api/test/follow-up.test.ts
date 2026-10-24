@@ -33,6 +33,32 @@ describe.skipIf(!url)("follow-up automation (PostgreSQL)", () => {
 
   afterAll(() => db.end());
 
+  it("records the initial contact in contact history when an opportunity is created with a contact date", async () => {
+    const created = await opportunities.create({
+      companyName: "Empresa recém-cadastrada",
+      sellerId: null,
+      estimatedValueCents: null,
+      items: [],
+      lastContactOn: "2026-10-14",
+      proposalValidUntil: null,
+      eventDate: null,
+    });
+
+    expect(created.lastContactOn).toBe("2026-10-14");
+    await expect(opportunities.contacts(created.id)).resolves.toMatchObject([
+      { contactedOn: "2026-10-14", note: "Contato informado no cadastro" },
+    ]);
+  });
+
+  it("rejects an initial contact date in the future", async () => {
+    await expect(
+      opportunities.create({
+        companyName: "Contato futuro",
+        lastContactOn: "2026-10-16",
+      }),
+    ).rejects.toMatchObject({ code: "CONTACT_IN_FUTURE" });
+  });
+
   it("creates reminders only for open deals with 2+ days without contact on the case data", async () => {
     const result = await followUp.run();
     expect(result).toEqual({ referenceDate: "2026-10-15", thresholdDays: 2, created: 3, resolved: 0, open: 3 });
