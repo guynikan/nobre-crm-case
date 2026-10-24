@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 /**
- * Time left until the scheduler runs again, as "m:ss".
+ * Time left until the scheduler runs again, rounded up to whole minutes.
  *
  * A cron of "every N minutes" fires on the minutes past the hour that N divides, so
  * the next run is the next such boundary. It reads the viewer's clock, which makes
@@ -15,9 +15,21 @@ export function useNextCheck(intervalMinutes: number | null | undefined): string
 
   useEffect(() => {
     if (!intervalMinutes) return;
-    setNow(new Date());
-    const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(timer);
+    const update = () => setNow(new Date());
+    update();
+
+    const untilNextMinute = 60_000 - (Date.now() % 60_000);
+    const firstTick = setTimeout(() => {
+      update();
+      const timer = setInterval(update, 60_000);
+      tickTimer = timer;
+    }, untilNextMinute);
+    let tickTimer: ReturnType<typeof setInterval> | undefined;
+
+    return () => {
+      clearTimeout(firstTick);
+      if (tickTimer) clearInterval(tickTimer);
+    };
   }, [intervalMinutes]);
 
   if (!intervalMinutes || now === null) return null;
@@ -26,8 +38,6 @@ export function useNextCheck(intervalMinutes: number | null | undefined): string
   next.setSeconds(0, 0);
   next.setMinutes(Math.floor(now.getMinutes() / intervalMinutes) * intervalMinutes + intervalMinutes);
 
-  const totalSeconds = Math.max(0, Math.round((next.getTime() - now.getTime()) / 1000));
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+  const minutes = Math.max(0, Math.ceil((next.getTime() - now.getTime()) / 60_000));
+  return `${minutes} ${minutes === 1 ? "minuto" : "minutos"}`;
 }

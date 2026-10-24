@@ -3,7 +3,7 @@
 import type { CalendarDate, Reminder, ReminderStatus } from "@nobre/contracts";
 import { daysBetween } from "@nobre/domain";
 import Link from "next/link";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { errorMessage } from "@/shared/api/client";
 import { formatDate, formatDateTime } from "@/shared/format";
 import { Button } from "@/shared/ui/fields";
@@ -25,6 +25,19 @@ export function RemindersHub({ onNavigate }: { onNavigate: () => void }) {
   const nextCheck = useNextCheck(meta.data?.followUpIntervalMinutes);
   const run = useRunFollowUp();
   const toast = useToast();
+  const listContentRef = useRef<HTMLDivElement>(null);
+  const [listHeight, setListHeight] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    const content = listContentRef.current;
+    if (!content) return;
+
+    const updateHeight = () => setListHeight(content.clientHeight);
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(content);
+    return () => observer.disconnect();
+  }, [status, reminders.data, reminders.isError, reminders.isPending]);
 
   function runNow() {
     run.mutate(undefined, {
@@ -39,16 +52,12 @@ export function RemindersHub({ onNavigate }: { onNavigate: () => void }) {
 
   return (
     <div className="flex max-h-[32rem] w-[26rem] max-w-[calc(100vw-2rem)] flex-col text-ink">
-      <header className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
-        <div>
+      <header className="flex min-h-[4.5rem] items-center justify-between gap-3 border-b border-line px-4 py-2">
+        <div className="min-w-0 flex-1">
           <h2 className="text-sm font-semibold">Follow-up</h2>
-          <p className="text-xs text-muted">
-            {status === "OPEN"
-              ? "Retome o contato com quem está esperando."
-              : "Encerrados quando o contato foi registrado ou a venda terminou."}
-          </p>
+          <p className="truncate text-xs text-muted">Lembretes abertos e histórico do follow-up.</p>
         </div>
-        <Button onClick={runNow} disabled={run.isPending}>
+        <Button className="w-36 shrink-0" onClick={runNow} disabled={run.isPending}>
           {run.isPending ? "Verificando…" : "Verificar agora"}
         </Button>
       </header>
@@ -61,14 +70,18 @@ export function RemindersHub({ onNavigate }: { onNavigate: () => void }) {
             type="button"
             aria-selected={status === value}
             onClick={() => setStatus(value)}
-            className={`rounded px-2.5 py-1 ${status === value ? "bg-nobre-700 text-white" : "text-muted hover:text-ink"}`}
+            className={`w-24 rounded px-2.5 py-1 ${status === value ? "bg-nobre-700 text-white" : "text-muted hover:text-ink"}`}
           >
             {value === "OPEN" ? "Abertos" : "Encerrados"}
           </button>
         ))}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-2">
+      <div
+        className="overflow-hidden transition-[height] duration-300 ease-out motion-reduce:transition-none"
+        style={listHeight === null ? undefined : { height: `${listHeight}px` }}
+      >
+      <div ref={listContentRef} className="max-h-[21rem] overflow-y-auto p-2">
         {reminders.isError ? (
           <ErrorState {...errorMessage(reminders.error)} onRetry={() => void reminders.refetch()} />
         ) : reminders.isPending ? (
@@ -105,6 +118,7 @@ export function RemindersHub({ onNavigate }: { onNavigate: () => void }) {
             ))}
           </ul>
         )}
+      </div>
       </div>
 
       {nextCheck ? (

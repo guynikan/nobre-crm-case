@@ -59,13 +59,14 @@ export function OpportunityCardBody({ opportunity, today }: { opportunity: Oppor
 }
 
 /**
- * Two weights, not four: the gates decide the order, the stripe only says whether this
- * one is merely due or has a deadline against it. Both the board and the list use it,
- * so a row and a card never disagree on how loud the same opportunity is.
+ * Three visual weights follow the recoverability of each urgency gate. Both the board
+ * and list use this mapping so a row and card never disagree about urgency.
  */
 export function priorityAccent(priority: AttentionPriority | null): string {
   if (priority === null) return "border-l-transparent";
-  return priority === "OVERDUE_CONTACT" ? "border-l-alert-600" : "border-l-danger-600";
+  if (priority === "UNTOUCHED" || priority === "EVENT_IMMINENT") return "border-l-danger-600";
+  if (priority === "PROPOSAL_EXPIRED") return "border-l-alert-600";
+  return "border-l-overdue-500";
 }
 
 export function cardClasses(opportunity: Opportunity) {

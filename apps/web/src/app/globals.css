@@ -17,6 +17,7 @@
   --color-alert-100: #fdf0d8;
   --color-danger-600: #b42318;
   --color-danger-100: #fde7e4;
+  --color-overdue-500: #858b82;
 }
 
 @layer base {
