@@ -1,6 +1,6 @@
 "use client";
 
-import type { CalendarDate, Reminder, ReminderStatus } from "@nobre/contracts";
+import type { CalendarDate, Reminder } from "@nobre/contracts";
 import { daysBetween } from "@nobre/domain";
 import Link from "next/link";
 import { useLayoutEffect, useRef, useState } from "react";
@@ -14,13 +14,12 @@ import { useReminders, useRunFollowUp } from "./queries";
 import { useNextCheck } from "./use-next-check";
 
 /**
- * Everything the follow-up automation produces, in one panel: what is pending, what it
- * already closed, and a way to run it by hand. There is no page behind it on purpose —
- * the funnel is where work happens, this is only where the job is observed.
+ * The follow-up work queue and a way to run the automation by hand. There is no page
+ * behind it on purpose — the funnel is where work happens, this is where new reminders
+ * are observed.
  */
 export function RemindersHub({ onNavigate }: { onNavigate: () => void }) {
-  const [status, setStatus] = useState<ReminderStatus>("OPEN");
-  const reminders = useReminders(status);
+  const reminders = useReminders("OPEN");
   const meta = useMeta();
   const nextCheck = useNextCheck(meta.data?.followUpIntervalMinutes);
   const run = useRunFollowUp();
@@ -37,7 +36,7 @@ export function RemindersHub({ onNavigate }: { onNavigate: () => void }) {
     const observer = new ResizeObserver(updateHeight);
     observer.observe(content);
     return () => observer.disconnect();
-  }, [status, reminders.data, reminders.isError, reminders.isPending]);
+  }, [reminders.data, reminders.isError, reminders.isPending]);
 
   function runNow() {
     run.mutate(undefined, {
@@ -62,21 +61,6 @@ export function RemindersHub({ onNavigate }: { onNavigate: () => void }) {
         </Button>
       </header>
 
-      <div role="tablist" aria-label="Situação" className="flex gap-1 border-b border-line px-4 py-2 text-sm">
-        {(["OPEN", "RESOLVED"] as const).map((value) => (
-          <button
-            key={value}
-            role="tab"
-            type="button"
-            aria-selected={status === value}
-            onClick={() => setStatus(value)}
-            className={`w-24 rounded px-2.5 py-1 ${status === value ? "bg-nobre-700 text-white" : "text-muted hover:text-ink"}`}
-          >
-            {value === "OPEN" ? "Abertos" : "Encerrados"}
-          </button>
-        ))}
-      </div>
-
       <div
         className="overflow-hidden transition-[height] duration-300 ease-out motion-reduce:transition-none"
         style={listHeight === null ? undefined : { height: `${listHeight}px` }}
@@ -91,8 +75,8 @@ export function RemindersHub({ onNavigate }: { onNavigate: () => void }) {
             ))}
           </div>
         ) : reminders.data.length === 0 ? (
-          <EmptyState title={status === "OPEN" ? "Nenhum lembrete aberto" : "Nenhum lembrete encerrado"}>
-            {status === "OPEN" ? "Todas as oportunidades em aberto tiveram contato recente." : null}
+          <EmptyState title="Nenhum lembrete aberto">
+            Todas as oportunidades em aberto tiveram contato recente.
           </EmptyState>
         ) : (
           <ul className="space-y-1">

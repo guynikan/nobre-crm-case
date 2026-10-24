@@ -51,7 +51,7 @@ A tabela em `CASE_OPPORTUNITIES_AS_GIVEN` permanece idêntica ao PDF; o deslocam
 - **Arrastar card:** enquanto você arrasta, as colunas permitidas ficam destacadas e as proibidas ficam apagadas. Soltar numa coluna proibida explica o porquê sem chamar a API. Soltar em Perdida abre um diálogo que exige o motivo. A mudança aparece na hora (update otimista). Se a API recusar, o card volta e uma mensagem em pt-BR diz o motivo. O teclado também funciona: espaço, setas e espaço.
 - **Busca e filtros:** empresa ou código, vendedor e, na visão de lista, etapa. Tudo fica na URL (`?q=pulso&view=list`), então um link compartilhado abre a mesma visão. Não há filtro de atenção: a urgência rege a ordem e a cor do quadro inteiro, em vez de ser um recorte opcional.
 - **Detalhe (drawer):** dados comerciais, itens, edição de valor, itens, validade da proposta e data do evento, registro de contato, botões das etapas permitidas (alternativa acessível ao arrasto) e histórico de etapas.
-- **Lembretes (sino no cabeçalho):** painel com os lembretes abertos e os encerrados, e o botão "Verificar agora". O sino mostra quantos estão abertos. Um lembrete novo chega como toast, e vira contagem no título da aba enquanto ninguém olha — não existe rota separada para isso.
+- **Lembretes (sino no cabeçalho):** painel de trabalho com os lembretes abertos e o botão "Verificar agora". Lembretes encerrados não aparecem no painel; o sino mostra quantos continuam abertos. Um lembrete novo chega como toast e vira contagem no título da aba enquanto ninguém olha — não existe rota separada para isso.
 - **Estados:** esqueleto no carregamento, erro com "Tentar de novo", vazio com mensagem e indicador "Atualizando…" quando os dados anteriores continuam na tela.
 
 ## Decisões
@@ -128,7 +128,7 @@ A prioridade é derivada a cada requisição e nunca persistida, então nenhuma 
 
 Atenção é propriedade do funil no instante em que se olha, calculada a cada requisição. Lembrete é registro: nasce do job, tem `dueOn`, `status` e `resolvedAt`, e só se encerra por um fato de negócio. Quem organiza o trabalho é o quadro, que já ordena e colore por urgência; o lembrete serve para que algo criado enquanto ninguém olhava não passe despercebido. Isso é notificação, e uma aba de navegação prometeria um lugar onde se trabalha.
 
-Por isso os lembretes vivem num sino no cabeçalho, com a contagem de abertos sempre visível, abrindo um painel com os abertos, os encerrados e o disparo manual. Não há rota separada: o funil é a única tela. Cada linha do painel mostra o portão que a colocou ali ("Evento em 2 dias", "Proposta vencida há 6 dias"), e não a contagem de dias — mostrar os dias contradiria a ordem na tela, já que a lista é ordenada por prazo e não por silêncio. Com a sequência se explicando sozinha, sair dela vira escolha informada: a fila não é imposta, porque o vendedor sabe coisas que o funil não sabe.
+Por isso os lembretes vivem num sino no cabeçalho, com a contagem de abertos sempre visível, abrindo uma fila de lembretes abertos e o disparo manual. O painel é para agir, não para consultar histórico; lembretes encerrados não são exibidos na interface. Não há rota separada: o funil é a única tela. Cada linha do painel mostra o portão que a colocou ali ("Evento em 2 dias", "Proposta vencida há 6 dias"), e não a contagem de dias — mostrar os dias contradiria a ordem na tela, já que a lista é ordenada por prazo e não por silêncio. Com a sequência se explicando sozinha, sair dela vira escolha informada: a fila não é imposta, porque o vendedor sabe coisas que o funil não sabe.
 
 Um lembrete novo chega como toast e soma uma contagem ao título da aba, que é o que alcança quem está em outra aba do navegador. A contagem some ao abrir o painel, não ao voltar o foco para a aba — zerar no retorno esconderia justamente o aviso levantado. Ela é derivada do que está aberto e ainda não visto, nunca acumulada, então um lembrete que o job encerrar antes de alguém olhar deixa de ser anunciado.
 
@@ -168,6 +168,7 @@ Campos em branco viram `null`, nunca um valor inventado.
 
 - Sem autenticação nem perfis (o PDF não exige). Qualquer pessoa com acesso à API pode alterar qualquer oportunidade, e o histórico não registra quem fez a mudança.
 - Não há tela para criar oportunidade. A API tem `POST /opportunities`, mas o fluxo de entrada de leads ficou fora do escopo.
+- O painel do sino não oferece histórico de lembretes encerrados; ele mostra somente o que ainda pede ação.
 - Trocar o vendedor de uma oportunidade e corrigir o nome da empresa só pela API. O `PATCH` aceita `sellerId` e `companyName`, mas a interface não expõe os dois; redistribuir carteira é operação de gestor, e sem autenticação não há a quem restringir.
 - O drawer e o painel do sino declaram semântica de diálogo mas não movem o foco ao abrir. Quem navega por leitor de tela continua no conteúdo de trás até chegar neles pelo Tab. O diálogo de motivo de perda usa `<dialog>` nativo e não tem esse problema.
 - Lembretes aparecem no CRM e, opcionalmente, num webhook. Não há e-mail nem push.
