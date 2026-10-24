@@ -137,13 +137,12 @@ export function PipelineBoard({ opportunities, today, thresholdDays, onOpen, onC
             leadingAction={stage === "FIRST_CONTACT" ? (
               <button
                 type="button"
+                aria-label="Adicionar oportunidade"
+                title="Adicionar oportunidade"
                 onClick={onCreate}
-                className="flex w-full items-center gap-2 rounded-md border border-dashed border-nobre-700/30 px-3 py-2 text-left text-xs font-medium text-nobre-700 transition-colors hover:border-nobre-500 hover:bg-nobre-100/60 focus-visible:border-nobre-500"
+                className="flex h-10 w-full items-center justify-center rounded-md border border-dashed border-line text-lg leading-none text-muted transition-colors hover:border-nobre-500 hover:bg-nobre-100/50 hover:text-nobre-700 focus-visible:border-nobre-500"
               >
-                <span aria-hidden="true" className="flex size-5 items-center justify-center rounded-full bg-nobre-100 text-sm leading-none">
-                  +
-                </span>
-                Adicionar oportunidade
+                <span aria-hidden="true">+</span>
               </button>
             ) : null}
           >
