@@ -1,12 +1,14 @@
 "use client";
 
-import { lazy, Suspense, useDeferredValue } from "react";
+import { lazy, Suspense, useDeferredValue, useState } from "react";
 import { errorMessage } from "@/shared/api/client";
 import { useMeta } from "@/shared/api/queries";
+import { Button } from "@/shared/ui/fields";
 import { EmptyState, ErrorState, Skeleton, Spinner } from "@/shared/ui/states";
 import { FilterBar } from "../filters/filter-bar";
 import { useOpportunityFilters } from "../filters/use-opportunity-filters";
 import { DetailSkeleton } from "../opportunity-detail/detail-skeleton";
+import { OpportunityCreateDialog } from "./opportunity-create-dialog";
 import { BOARD_PAGE_SIZE, useOpportunityList } from "./queries";
 import { PipelineBoard } from "./board";
 import { OpportunityTable } from "./opportunity-table";
@@ -16,6 +18,7 @@ const OpportunityDetail = lazy(() => import("../opportunity-detail/opportunity-d
 
 export function PipelinePage() {
   const { filters, view, openOpportunityId, update, isPending, hasActiveFilters } = useOpportunityFilters();
+  const [createOpen, setCreateOpen] = useState(false);
   // Rendering the board is the expensive part; deferring the filters keeps the inputs responsive.
   const deferredFilters = useDeferredValue(filters);
   const isStale = deferredFilters !== filters || isPending;
@@ -30,14 +33,19 @@ export function PipelinePage() {
     className="flex h-[calc(100vh-2.75rem)] flex-col">
       <div className="space-y-3 px-6 py-4">
         <FilterBar filters={filters} view={view} update={update} hasActiveFilters={hasActiveFilters} />
-        <div className="flex h-5 items-center gap-3 text-sm text-muted" aria-live="polite">
-          {list.data ? (
-            <span>
-              {list.data.total === 1 ? "1 oportunidade" : `${list.data.total} oportunidades`}
-              {list.data.total > BOARD_PAGE_SIZE ? ` (exibindo as ${BOARD_PAGE_SIZE} mais urgentes)` : ""}
-            </span>
-          ) : null}
-          {isStale || list.isFetching ? <Spinner label="Atualizando" /> : null}
+        <div className="flex min-h-10 items-center justify-between gap-3 text-sm text-muted" aria-live="polite">
+          <div className="flex min-w-0 items-center gap-3">
+            {list.data ? (
+              <span>
+                {list.data.total === 1 ? "1 oportunidade" : `${list.data.total} oportunidades`}
+                {list.data.total > BOARD_PAGE_SIZE ? ` (exibindo as ${BOARD_PAGE_SIZE} mais urgentes)` : ""}
+              </span>
+            ) : null}
+            {isStale || list.isFetching ? <Spinner label="Atualizando" /> : null}
+          </div>
+          <Button className="shrink-0" onClick={() => setCreateOpen(true)}>
+            <span aria-hidden="true">+</span> Nova oportunidade
+          </Button>
         </div>
       </div>
 
@@ -79,6 +87,15 @@ export function PipelinePage() {
           <OpportunityDetail id={openOpportunityId} meta={meta.data} onClose={() => update({ opportunity: null })} />
         </Suspense>
       ) : null}
+
+      <OpportunityCreateDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={(id) => {
+          setCreateOpen(false);
+          update({ search: null, sellerId: null, stage: null, view: null, opportunity: id });
+        }}
+      />
     </div>
   );
 }

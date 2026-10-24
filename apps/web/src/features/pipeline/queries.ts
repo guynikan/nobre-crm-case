@@ -1,6 +1,13 @@
 "use client";
 
-import { opportunityPageSchema, opportunitySchema, type Opportunity, type OpportunityPage, type Stage } from "@nobre/contracts";
+import {
+  opportunityPageSchema,
+  opportunitySchema,
+  type CreateOpportunityBody,
+  type Opportunity,
+  type OpportunityPage,
+  type Stage,
+} from "@nobre/contracts";
 import { evaluateAttentionWithPriority } from "@nobre/domain";
 import { keepPreviousData, useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { apiRequest, errorMessage } from "@/shared/api/client";
@@ -27,6 +34,25 @@ export function useOpportunityList(filters: OpportunityFilters) {
       }),
     // Keep showing the previous result while a new filter loads, instead of flashing a skeleton.
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useCreateOpportunity() {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+
+  return useMutation({
+    mutationFn: (body: CreateOpportunityBody) =>
+      apiRequest("/opportunities", { method: "POST", schema: opportunitySchema, body }),
+    onSuccess: (created) => {
+      queryClient.setQueryData(queryKeys.opportunity(created.id), created);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.opportunityLists });
+      toast.success("Oportunidade criada", `${created.code} · ${created.companyName}`);
+    },
+    onError: (error) => {
+      const { title, detail } = errorMessage(error);
+      toast.error(title, detail);
+    },
   });
 }
 
