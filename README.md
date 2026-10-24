@@ -171,7 +171,6 @@ Campos em branco viram `null`, nunca um valor inventado.
 - A entrada de leads pelo site e sua distribuição automática continuam fora do escopo; novas oportunidades são cadastradas manualmente pelo funil.
 - O painel do sino não oferece histórico de lembretes encerrados; ele mostra somente o que ainda pede ação.
 - Trocar o vendedor de uma oportunidade e corrigir o nome da empresa só pela API. O `PATCH` aceita `sellerId` e `companyName`, mas a interface não expõe os dois; redistribuir carteira é operação de gestor, e sem autenticação não há a quem restringir.
-- O drawer e o painel do sino declaram semântica de diálogo mas não movem o foco ao abrir. Quem navega por leitor de tela continua no conteúdo de trás até chegar neles pelo Tab. O diálogo de motivo de perda usa `<dialog>` nativo e não tem esse problema.
 - Lembretes aparecem no CRM e, opcionalmente, num webhook. Não há e-mail nem push.
 - O quadro carrega até 500 oportunidades por filtro. Acima disso, seria preciso paginar por coluna.
 - Os testes automatizados cobrem as regras críticas e o follow-up. A interface foi verificada manualmente: arrastar, rollback em 409, Perdida com motivo, contato que encerra lembrete, filtros na URL e execução manual do follow-up.
@@ -237,7 +236,7 @@ A implementação foi feita em camadas, de dentro para fora, para que as regras 
 4. Interface Next.js organizada por feature.
 5. Documentação e verificações finais.
 
-Com isso, transições de etapa, cálculo de atenção, prioridade e planejamento de lembretes podem ser testados sem subir a aplicação. A suíte tem 60 testes de domínio e 21 casos de integração contra PostgreSQL, entre follow-up e o espelho SQL da prioridade. Os casos de integração são pulados quando `TEST_DATABASE_URL` não está configurada.
+Com isso, transições de etapa, cálculo de atenção, prioridade e planejamento de lembretes podem ser testados sem subir a aplicação. A suíte tem 60 testes de domínio, 23 casos de integração contra PostgreSQL e 5 testes da formatação monetária na interface. Os casos de integração são pulados quando `TEST_DATABASE_URL` não está configurada.
 
 As verificações manuais da interface cobriram arrastar e soltar, rollback depois de um `409`, diálogo de motivo de perda, filtros na URL, encerramento de lembrete por contato, execução manual do follow-up e a chegada de um lembrete novo como toast e contagem no título. Elas complementam, e não substituem, os testes automatizados das regras críticas.
 
