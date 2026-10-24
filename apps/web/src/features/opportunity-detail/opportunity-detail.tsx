@@ -3,7 +3,7 @@
 import { isFinalStage, type AppMeta, type Opportunity } from "@nobre/contracts";
 import { reachableStages } from "@nobre/domain";
 import { useQueryErrorResetBoundary } from "@tanstack/react-query";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import { errorMessage } from "@/shared/api/client";
 import { attentionLabel, formatCents, formatDate, formatDateTime, formatQuantity, STAGE_LABELS } from "@/shared/format";
 import { ErrorBoundary } from "@/shared/ui/error-boundary";
@@ -25,22 +25,19 @@ interface Props {
 
 export default function OpportunityDetail({ id, meta, onClose }: Props) {
   const { reset } = useQueryErrorResetBoundary();
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !document.querySelector("dialog[open]")) onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const closeDrawer = () => {
+    if (dialogRef.current?.open) dialogRef.current.close();
+    else onClose();
+  };
 
   return (
-    <DrawerShell onClose={onClose} labelledBy="detail-title">
+    <DrawerShell dialogRef={dialogRef} onClose={onClose} labelledBy="detail-title">
       <ErrorBoundary
         key={id}
         fallback={(error, retry) => (
           <div className="space-y-4 p-6">
-            <CloseButton onClose={onClose} />
+            <CloseButton onClose={closeDrawer} />
             <ErrorState
               {...errorMessage(error)}
               onRetry={() => {
@@ -59,7 +56,7 @@ export default function OpportunityDetail({ id, meta, onClose }: Props) {
             </div>
           }
         >
-          <DetailContent id={id} meta={meta} onClose={onClose} />
+          <DetailContent id={id} meta={meta} onClose={closeDrawer} />
         </Suspense>
       </ErrorBoundary>
     </DrawerShell>

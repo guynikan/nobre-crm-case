@@ -56,7 +56,7 @@ export function RemindersHub({ onNavigate }: { onNavigate: () => void }) {
           <h2 className="text-sm font-semibold">Follow-up</h2>
           <p className="text-xs text-muted">Lembretes abertos e histórico do follow-up.</p>
         </div>
-        <Button className="w-36 shrink-0" onClick={runNow} disabled={run.isPending}>
+        <Button data-dialog-initial-focus className="w-36 shrink-0" onClick={runNow} disabled={run.isPending}>
           {run.isPending ? "Verificando…" : "Verificar agora"}
         </Button>
       </header>

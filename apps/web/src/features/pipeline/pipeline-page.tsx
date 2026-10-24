@@ -78,7 +78,7 @@ export function PipelinePage() {
       )}
 
       {openOpportunityId && meta.data ? (
-        <Suspense fallback={<DetailSkeleton />}>
+        <Suspense fallback={<DetailSkeleton onClose={() => update({ opportunity: null })} />}>
           <OpportunityDetail id={openOpportunityId} meta={meta.data} onClose={() => update({ opportunity: null })} />
         </Suspense>
       ) : null}

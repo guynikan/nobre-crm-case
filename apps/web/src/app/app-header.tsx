@@ -14,26 +14,43 @@ export function AppHeader() {
   const openCount = reminders.data?.length ?? 0;
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const restoreFocusOnClose = useRef(true);
   const { markSeen } = useReminderNotifications(reminders.data, isOpen);
 
   function open() {
+    restoreFocusOnClose.current = true;
     setIsOpen(true);
     markSeen();
   }
 
   useEffect(() => {
     if (!isOpen) return;
+    const focusFrame = requestAnimationFrame(() => {
+      const initialFocus = dialogRef.current?.querySelector<HTMLElement>("[data-dialog-initial-focus]");
+      (initialFocus ?? dialogRef.current)?.focus();
+    });
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setIsOpen(false);
+      if (event.key === "Escape") {
+        event.preventDefault();
+        restoreFocusOnClose.current = true;
+        setIsOpen(false);
+      }
     };
     const onPointerDown = (event: PointerEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) setIsOpen(false);
+      if (!containerRef.current?.contains(event.target as Node)) {
+        restoreFocusOnClose.current = false;
+        setIsOpen(false);
+      }
     };
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("pointerdown", onPointerDown);
     return () => {
+      cancelAnimationFrame(focusFrame);
       document.removeEventListener("keydown", onKeyDown);
       document.removeEventListener("pointerdown", onPointerDown);
+      if (restoreFocusOnClose.current) triggerRef.current?.focus();
     };
   }, [isOpen]);
 
@@ -52,13 +69,21 @@ export function AppHeader() {
 
         <div className="relative" ref={containerRef}>
           <button
+            ref={triggerRef}
             type="button"
             aria-haspopup="dialog"
             aria-expanded={isOpen}
             aria-label={
               openCount > 0 ? `Lembretes de follow-up: ${openCount} em aberto` : "Lembretes de follow-up"
             }
-            onClick={() => (isOpen ? setIsOpen(false) : open())}
+            onClick={() => {
+              if (isOpen) {
+                restoreFocusOnClose.current = true;
+                setIsOpen(false);
+              } else {
+                open();
+              }
+            }}
             className={`relative rounded-md p-2 transition hover:bg-white/10 ${isOpen ? "bg-white/15" : ""}`}
           >
             <BellIcon />
@@ -71,11 +96,18 @@ export function AppHeader() {
 
           {isOpen ? (
             <div
+              ref={dialogRef}
               role="dialog"
               aria-label="Lembretes de follow-up"
+              tabIndex={-1}
               className="absolute right-0 z-40 mt-2 overflow-hidden rounded-lg border border-line bg-panel shadow-xl"
             >
-              <RemindersHub onNavigate={() => setIsOpen(false)} />
+              <RemindersHub
+                onNavigate={() => {
+                  restoreFocusOnClose.current = false;
+                  setIsOpen(false);
+                }}
+              />
             </div>
           ) : null}
         </div>
