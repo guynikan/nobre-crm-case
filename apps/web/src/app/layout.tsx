@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { Roboto, Roboto_Mono } from "next/font/google";
 import type { ReactNode } from "react";
 import { AppHeader } from "./app-header";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const sans = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-plex-sans" });
-const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-plex-mono" });
+const sans = Roboto({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-roboto" });
+const mono = Roboto_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-roboto-mono" });
 
 export const metadata: Metadata = {
   title: "Nobre CRM · Funil de vendas",
