@@ -1,6 +1,7 @@
 import type { AttentionReason, CalendarDate, ReminderStatus, Stage } from "@nobre/contracts";
 import type { FollowUpCandidate, OpenReminderRef, ReminderToCreate } from "@nobre/domain";
 import type { DbClient } from "../../db/pool.js";
+import { priorityRankSql, type AttentionContext } from "../../shared/attention-sql.js";
 
 export type ReminderResolution = "CONTACT_REGISTERED" | "OPPORTUNITY_FINAL" | "NO_LONGER_NEEDED";
 
@@ -86,6 +87,7 @@ const SELECT_REMINDER = `
 export async function listReminders(
   db: DbClient,
   filters: { status: ReminderStatus; sellerId?: string | undefined },
+  attention: AttentionContext,
 ): Promise<ReminderRow[]> {
   const params: unknown[] = [];
   const where = [filters.status === "OPEN" ? "r.resolved_at IS NULL" : "r.resolved_at IS NOT NULL"];
@@ -93,11 +95,19 @@ export async function listReminders(
     params.push(filters.sellerId);
     where.push(`o.seller_id = $${params.length}`);
   }
-  // Open reminders: the longest silence first (never contacted counts as the longest).
-  const order =
-    filters.status === "OPEN"
-      ? "r.days_since_last_contact DESC NULLS FIRST, o.code"
-      : "r.resolved_at DESC, o.code";
+  // Open reminders follow the same gates as the board, so both surfaces agree on what is
+  // most urgent; the day count only breaks ties inside a gate. Resolved ones are history.
+  let order: string;
+  if (filters.status === "OPEN") {
+    const bind = (value: unknown) => {
+      params.push(value);
+      return `$${params.length}`;
+    };
+    const rank = priorityRankSql(bind(attention.today), bind(attention.thresholdDays), bind(attention.eventHorizonDays));
+    order = `${rank} ASC, r.days_since_last_contact DESC NULLS FIRST, o.code`;
+  } else {
+    order = "r.resolved_at DESC, o.code";
+  }
   const { rows } = await db.query<ReminderRow>(
     `${SELECT_REMINDER} WHERE ${where.join(" AND ")} ORDER BY ${order} LIMIT 500`,
     params,

@@ -47,7 +47,7 @@ A tabela em `CASE_OPPORTUNITIES_AS_GIVEN` permanece idêntica ao PDF; o deslocam
 
 ## O que tem na tela
 
-- **Funil (`/`):** Kanban com uma coluna por etapa e mais a coluna Perdida. Cada coluna mostra o total, a soma dos valores e quantas oportunidades precisam de atenção. O card mostra valor, brinde e quantidade, vendedor, dias sem contato e alertas de data (proposta vencida, evento passado ou nos próximos 7 dias).
+- **Funil (`/`):** Kanban com uma coluna por etapa e mais a coluna Perdida. Cada coluna mostra o total, a soma dos valores e quantas oportunidades precisam de atenção. O card mostra valor, brinde e quantidade, vendedor, dias sem contato e alertas de data (proposta vencida, evento passado ou nos próximos 7 dias). A faixa lateral do card distingue o que está só vencido do que tem prazo contra, e os cards saem ordenados pelos portões de urgência.
 - **Arrastar card:** enquanto você arrasta, as colunas permitidas ficam destacadas e as proibidas ficam apagadas. Soltar numa coluna proibida explica o porquê sem chamar a API. Soltar em Perdida abre um diálogo que exige o motivo. A mudança aparece na hora (update otimista). Se a API recusar, o card volta e uma mensagem em pt-BR diz o motivo. O teclado também funciona: espaço, setas e espaço.
 - **Busca e filtros:** empresa ou código, vendedor, "precisam de atenção hoje" e, na visão de lista, etapa. Tudo fica na URL (`?q=pulso&attention=1&view=list`), então um link compartilhado abre a mesma visão.
 - **Detalhe (drawer):** dados comerciais, itens, edição de valor e itens, registro de contato, botões das etapas permitidas (alternativa acessível ao arrasto) e histórico de etapas.

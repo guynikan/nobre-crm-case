@@ -1,5 +1,5 @@
 import type { FollowUpRunResult, Reminder, ReminderStatus } from "@nobre/contracts";
-import { planFollowUp } from "@nobre/domain";
+import { DEFAULT_EVENT_HORIZON_DAYS, planFollowUp } from "@nobre/domain";
 import { withTransaction, type Db } from "../../db/pool.js";
 import type { Clock } from "../../shared/clock.js";
 import * as repo from "./follow-up.repository.js";
@@ -35,6 +35,11 @@ export function toReminder(row: repo.ReminderRow): Reminder {
 }
 
 export function createFollowUpService({ db, clock, attentionThresholdDays, notify, log }: FollowUpServiceDeps) {
+  const attentionContext = () => ({
+    today: clock.today(),
+    thresholdDays: attentionThresholdDays,
+    eventHorizonDays: DEFAULT_EVENT_HORIZON_DAYS,
+  });
   return {
     /**
      * One run of the automation. Idempotent: running it again on the same data changes nothing.
@@ -84,7 +89,7 @@ export function createFollowUpService({ db, clock, attentionThresholdDays, notif
     },
 
     async list(filters: { status: ReminderStatus; sellerId?: string | undefined }): Promise<Reminder[]> {
-      return (await repo.listReminders(db, filters)).map(toReminder);
+      return (await repo.listReminders(db, filters, attentionContext())).map(toReminder);
     },
   };
 }

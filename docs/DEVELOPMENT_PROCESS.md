@@ -49,7 +49,7 @@ Os erros usam Problem Details (RFC 9457): valores estáveis e legíveis por máq
 
 ### Regras do funil
 
-- Uma oportunidade precisa de atenção quando está aberta e não tem contato, ou quando o último contato ocorreu há dois ou mais dias corridos.
+- Uma oportunidade precisa de atenção quando está aberta e não tem contato, ou quando o último contato ocorreu há dois ou mais dias corridos. O que precisa de atenção é ordenado por portões de urgência, descritos adiante.
 - Mover para Perdida exige um motivo.
 - Fechamento e Perdida são etapas finais.
 - Etapas a partir da apresentação de orçamento exigem valor estimado positivo e pelo menos um item de brinde.
@@ -58,9 +58,34 @@ Os erros usam Problem Details (RFC 9457): valores estáveis e legíveis por máq
 
 O PDF não definiu se os dias seriam corridos ou úteis. Foram escolhidos dias corridos e a decisão foi documentada. Ele também não definiu todos os retornos possíveis no funil, então foram permitidos apenas retornos explícitos de uma etapa que fazem sentido para o negócio.
 
+### Prioridade dentro da atenção
+
+A regra de dois dias responde se uma oportunidade está vencida, e responde bem. O que ela não responde é por onde começar. Medido sobre a carga completa de 87 oportunidades, o limite sinaliza 59 delas: um alerta que dispara em dois terços do quadro não orienta ninguém, e o vendedor volta a decidir no olho justamente o que a ferramenta deveria decidir por ele.
+
+As oportunidades vencidas são ordenadas por quatro portões, avaliados na ordem e com o primeiro que casa vencendo:
+
+1. `UNTOUCHED` — nenhum contato registrado. Ninguém começou a venda, e este é o problema que o enunciado lista em primeiro lugar.
+2. `EVENT_IMMINENT` — evento do cliente dentro de sete dias. É uma data dura: perdido o prazo, não sobra tempo de produção.
+3. `PROPOSAL_EXPIRED` — validade da proposta já passou. É o mais recuperável dos três, porque um orçamento pode ser reemitido.
+4. `OVERDUE_CONTACT` — o caso base, só idade do último contato.
+
+A ordem é de irrecuperabilidade, não de gravidade percebida: o critério foi quanto da venda se perde se o vendedor deixar aquele caso para amanhã. Com a mesma carga, os três primeiros portões somam 21 oportunidades e o caso base fica com 38, o que devolve ao alerta a capacidade de significar alguma coisa.
+
+A decisão mais importante aqui é de fronteira: **os portões ordenam, nunca ampliam**. Uma oportunidade contatada hoje continua fora da lista mesmo com evento amanhã, porque alguém comprovadamente já está cuidando dela. Isso preserva o significado de `needsAttention`, e portanto também o da automação de follow-up, que cria lembretes a partir dele — mudar a abrangência mudaria silenciosamente o que é um lembrete.
+
+A prioridade é derivada a cada requisição e nunca persistida, então nenhuma migração acompanha a regra. Em compensação, ela existe duas vezes: em TypeScript, em `attentionPriority`, e espelhada em SQL, porque a ordenação e a paginação acontecem no banco. Essa duplicação é o custo real da decisão, e é o mesmo custo que a regra de atenção já pagava.
+
+A duplicação não é evitável aqui. Ordenar em TypeScript depois da consulta ordenaria apenas a página já trazida, e a primeira página deixaria de conter as oportunidades mais urgentes do funil; eliminar o lado TypeScript tiraria a regra do pacote de domínio, onde ela é função pura e testável, e impediria o cálculo otimista que o front faz ao arrastar um card antes de a API responder.
+
+O que é evitável é a divergência silenciosa entre as duas. `attention-sql-mirror.test.ts` roda a expressão SQL real contra o banco de teste e compara, caso a caso, com a função de domínio: quinze entradas que cobrem as bordas do horizonte, a validade que vence hoje, o limite exato de dias, o lead nunca contatado e as etapas finais. Nenhuma linha é escrita, porque o espelho é expressão pura e um `VALUES` basta. O teste foi verificado contra uma mutação deliberada — trocar `<` por `<=` na comparação de validade — e acusa a diferença.
+
+Na interface, os quatro portões viram **dois pesos**, não quatro. A faixa lateral do card distingue apenas "vencida" de "vencida com prazo contra", porque o card já diz em palavras qual é o prazo — "Proposta vencida em 21/10", "Evento em 2 dias". Repetir isso em cor seria transformar o quadro na árvore de natal que a mudança veio desfazer. A granularidade fina fica na ordem dos cards dentro da coluna.
+
 ### Automação de follow-up
 
 O job agendado roda a cada 15 minutos por padrão, e o mesmo serviço está disponível em `POST /follow-up/run` para execução manual. Ele cria lembretes para oportunidades que precisam de atenção e encerra lembretes quando um contato recente é registrado ou a oportunidade chega a uma etapa final.
+
+O problema 4 do enunciado tem duas metades, e elas foram resolvidas em lugares diferentes. "É fácil esquecer de dar retorno" é o job: ele roda sem ninguém pedir, grava o pendente e pode avisar fora do app pelo webhook, inclusive quando a tela está fechada — que é exatamente quando se esquece. "Como ajudar o vendedor a se organizar" são os portões de urgência, que decidem a ordem. A segunda metade não é automação nenhuma: só calcula quando alguém renderiza uma página. São camadas complementares, e a mesma ordenação rege o quadro e a lista de lembretes, para que as duas superfícies nunca discordem sobre qual é o caso mais urgente.
 
 A automação é deliberadamente idempotente:
 
@@ -127,7 +152,7 @@ pnpm test
 pnpm build
 ```
 
-As três concluíram com sucesso no estado final da implementação. A suíte de testes inclui 52 testes de domínio e 5 testes de integração de follow-up. O build gera o bundle da API e as rotas Next.js `/` e `/lembretes`.
+As três concluíram com sucesso no estado final da implementação. A suíte de testes inclui 60 testes de domínio e 20 de integração contra PostgreSQL, entre follow-up e o espelho SQL da prioridade. O build gera o bundle da API e as rotas Next.js `/` e `/lembretes`.
 
 Também foram registradas verificações manuais da interface para arrastar e soltar, rollback após um `409`, diálogo de motivo de perda, filtros na URL, encerramento de lembrete por contato e execução manual do follow-up. Essas verificações complementam, e não substituem, os testes automatizados das regras críticas.
 

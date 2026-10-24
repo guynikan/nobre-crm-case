@@ -9,7 +9,13 @@ import type {
   UpdateOpportunityBody,
 } from "@nobre/contracts";
 import { createOpportunityBodySchema, isFinalStage } from "@nobre/contracts";
-import { daysBetween, evaluateAttention, evaluateQuoteInvariant, evaluateTransition } from "@nobre/domain";
+import {
+  daysBetween,
+  DEFAULT_EVENT_HORIZON_DAYS,
+  evaluateAttentionWithPriority,
+  evaluateQuoteInvariant,
+  evaluateTransition,
+} from "@nobre/domain";
 import { withTransaction, type Db, type DbClient } from "../../db/pool.js";
 import type { Clock } from "../../shared/clock.js";
 import { AppError } from "../../shared/errors.js";
@@ -25,7 +31,11 @@ export interface OpportunityServiceDeps {
 export type OpportunityService = ReturnType<typeof createOpportunityService>;
 
 export function createOpportunityService({ db, clock, attentionThresholdDays }: OpportunityServiceDeps) {
-  const attentionContext = () => ({ today: clock.today(), thresholdDays: attentionThresholdDays });
+  const attentionContext = () => ({
+    today: clock.today(),
+    thresholdDays: attentionThresholdDays,
+    eventHorizonDays: DEFAULT_EVENT_HORIZON_DAYS,
+  });
 
   function toOpportunity(row: repo.OpportunityRow, items: repo.GiftItemRow[]): Opportunity {
     return {
@@ -42,8 +52,13 @@ export function createOpportunityService({ db, clock, attentionThresholdDays }: 
       lostReason: row.lost_reason,
       version: row.version,
       isSynthetic: row.is_synthetic,
-      attention: evaluateAttention(
-        { stage: row.stage, lastContactOn: row.last_contact_on },
+      attention: evaluateAttentionWithPriority(
+        {
+          stage: row.stage,
+          lastContactOn: row.last_contact_on,
+          proposalValidUntil: row.proposal_valid_until,
+          eventDate: row.event_date,
+        },
         clock.today(),
         attentionThresholdDays,
       ),

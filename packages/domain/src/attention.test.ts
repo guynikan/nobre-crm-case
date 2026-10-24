@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Stage } from "@nobre/contracts";
-import { evaluateAttention } from "./attention";
+import { attentionPriority, evaluateAttention } from "./attention";
 
 const REFERENCE_DATE = "2026-10-15";
 
@@ -61,5 +61,72 @@ describe("evaluateAttention", () => {
       evaluateAttention({ stage: "FOLLOW_UP", lastContactOn: "2026-09-30" }, "2026-10-01")
         .daysSinceLastContact,
     ).toBe(1);
+  });
+});
+
+describe("attentionPriority", () => {
+  const due = { stage: "FOLLOW_UP", lastContactOn: "2026-10-01" } as const; // 14 days: always due
+
+  it("ranks nothing that is not already due", () => {
+    expect(
+      attentionPriority(
+        { stage: "FOLLOW_UP", lastContactOn: REFERENCE_DATE, proposalValidUntil: "2026-01-01", eventDate: "2026-10-16" },
+        REFERENCE_DATE,
+      ),
+    ).toBeNull();
+  });
+
+  it("never ranks a final stage, however close its event is", () => {
+    expect(
+      attentionPriority(
+        { stage: "CLOSING", lastContactOn: "2026-01-01", proposalValidUntil: "2026-01-01", eventDate: "2026-10-16" },
+        REFERENCE_DATE,
+      ),
+    ).toBeNull();
+  });
+
+  it("puts a lead nobody ever contacted first, even with no other signal", () => {
+    expect(
+      attentionPriority(
+        { stage: "FIRST_CONTACT", lastContactOn: null, proposalValidUntil: null, eventDate: null },
+        REFERENCE_DATE,
+      ),
+    ).toBe("UNTOUCHED");
+  });
+
+  it("prefers an imminent event over an expired proposal", () => {
+    expect(
+      attentionPriority({ ...due, proposalValidUntil: "2026-10-01", eventDate: "2026-10-18" }, REFERENCE_DATE),
+    ).toBe("EVENT_IMMINENT");
+  });
+
+  it("ignores an event that already happened", () => {
+    expect(
+      attentionPriority({ ...due, proposalValidUntil: null, eventDate: "2026-10-14" }, REFERENCE_DATE),
+    ).toBe("OVERDUE_CONTACT");
+  });
+
+  it("treats the horizon edge as imminent and the day after as not", () => {
+    expect(attentionPriority({ ...due, proposalValidUntil: null, eventDate: "2026-10-22" }, REFERENCE_DATE)).toBe(
+      "EVENT_IMMINENT",
+    );
+    expect(attentionPriority({ ...due, proposalValidUntil: null, eventDate: "2026-10-23" }, REFERENCE_DATE)).toBe(
+      "OVERDUE_CONTACT",
+    );
+  });
+
+  it("does not call a proposal that expires today expired", () => {
+    expect(
+      attentionPriority({ ...due, proposalValidUntil: REFERENCE_DATE, eventDate: null }, REFERENCE_DATE),
+    ).toBe("OVERDUE_CONTACT");
+    expect(
+      attentionPriority({ ...due, proposalValidUntil: "2026-10-14", eventDate: null }, REFERENCE_DATE),
+    ).toBe("PROPOSAL_EXPIRED");
+  });
+
+  it("falls back to the plain overdue case when no deadline is at stake", () => {
+    expect(attentionPriority({ ...due, proposalValidUntil: null, eventDate: null }, REFERENCE_DATE)).toBe(
+      "OVERDUE_CONTACT",
+    );
   });
 });

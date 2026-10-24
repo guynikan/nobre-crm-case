@@ -1,7 +1,7 @@
 "use client";
 
 import { opportunityPageSchema, opportunitySchema, type Opportunity, type OpportunityPage, type Stage } from "@nobre/contracts";
-import { evaluateAttention } from "@nobre/domain";
+import { evaluateAttentionWithPriority } from "@nobre/domain";
 import { keepPreviousData, useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { apiRequest, errorMessage } from "@/shared/api/client";
 import { queryKeys } from "@/shared/api/query-keys";
@@ -80,7 +80,16 @@ export function useMoveStage() {
         ...current,
         stage: toStage,
         lostReason: lostReason ?? null,
-        attention: evaluateAttention({ stage: toStage, lastContactOn: current.lastContactOn }, today, thresholdDays),
+        attention: evaluateAttentionWithPriority(
+          {
+            stage: toStage,
+            lastContactOn: current.lastContactOn,
+            proposalValidUntil: current.proposalValidUntil,
+            eventDate: current.eventDate,
+          },
+          today,
+          thresholdDays,
+        ),
       }));
       return { snapshot };
     },

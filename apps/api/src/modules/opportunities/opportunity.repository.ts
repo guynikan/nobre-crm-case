@@ -1,5 +1,6 @@
 import type { CalendarDate, GiftItemInput, Stage } from "@nobre/contracts";
 import type { DbClient } from "../../db/pool.js";
+import { needsAttentionSql, priorityRankSql, type AttentionContext } from "../../shared/attention-sql.js";
 
 export interface OpportunityRow {
   id: string;
@@ -35,24 +36,12 @@ export interface ListFilters {
   pageSize: number;
 }
 
-/** Context the attention rule needs; kept in SQL so filtering and paging happen in the database. */
-export interface AttentionContext {
-  today: CalendarDate;
-  thresholdDays: number;
-}
-
 const SELECT_OPPORTUNITY = `
   SELECT o.id, o.code, o.company_name, o.seller_id, s.name AS seller_name,
          o.estimated_value_cents, o.last_contact_on, o.proposal_valid_until, o.event_date,
          o.stage, o.lost_reason, o.version, o.is_synthetic, o.created_at, o.updated_at
   FROM opportunities o
   LEFT JOIN sellers s ON s.id = o.seller_id`;
-
-/** SQL mirror of evaluateAttention in @nobre/domain; placeholders are bound per query. */
-function needsAttentionSql(today: string, threshold: string): string {
-  return `(o.stage NOT IN ('CLOSING', 'LOST')
-    AND (o.last_contact_on IS NULL OR o.last_contact_on <= ${today}::date - ${threshold}::int))`;
-}
 
 function escapeLike(term: string): string {
   return term.replace(/[\\%_]/g, (char) => `\\${char}`);
@@ -93,14 +82,19 @@ export async function listOpportunities(
     countParams.values,
   );
 
-  // Sellers see first what needs action today, then the oldest contacts, then the biggest deals.
+  // Sellers see first the most urgent of what needs action, then the oldest contacts,
+  // then the biggest deals. The ranking is the one attentionPriority assigns.
   const params = new Params();
   const whereSql = buildWhere(params, filters, attention);
-  const attentionOrder = needsAttentionSql(params.add(attention.today), params.add(attention.thresholdDays));
+  const priorityOrder = priorityRankSql(
+    params.add(attention.today),
+    params.add(attention.thresholdDays),
+    params.add(attention.eventHorizonDays),
+  );
   const { rows } = await db.query<OpportunityRow>(
     `${SELECT_OPPORTUNITY}
      ${whereSql}
-     ORDER BY ${attentionOrder} DESC, o.last_contact_on ASC NULLS FIRST,
+     ORDER BY ${priorityOrder} ASC, o.last_contact_on ASC NULLS FIRST,
               o.estimated_value_cents DESC NULLS LAST, o.code
      LIMIT ${params.add(filters.pageSize)} OFFSET ${params.add((filters.page - 1) * filters.pageSize)}`,
     params.values,

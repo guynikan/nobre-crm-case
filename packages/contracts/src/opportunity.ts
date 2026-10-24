@@ -14,10 +14,26 @@ export type GiftItem = z.infer<typeof giftItemSchema>;
 export const attentionReasonSchema = z.enum(["NO_CONTACT_RECORDED", "DAYS_WITHOUT_CONTACT"]);
 export type AttentionReason = z.infer<typeof attentionReasonSchema>;
 
-export const attentionSchema = z.object({
+/**
+ * Urgency order among the deals that already need attention, most urgent first.
+ * Derived per request from the business date; never stored.
+ */
+export const ATTENTION_PRIORITIES = ["UNTOUCHED", "EVENT_IMMINENT", "PROPOSAL_EXPIRED", "OVERDUE_CONTACT"] as const;
+export const attentionPrioritySchema = z.enum(ATTENTION_PRIORITIES);
+export type AttentionPriority = z.infer<typeof attentionPrioritySchema>;
+
+/** Whether a deal is due, which is all the follow-up automation needs to know. */
+export const attentionCheckSchema = z.object({
   needsAttention: z.boolean(),
   reason: attentionReasonSchema.nullable(),
   daysSinceLastContact: z.number().int().nullable(),
+});
+export type AttentionCheck = z.infer<typeof attentionCheckSchema>;
+
+/** The check plus the ranking the board uses to order what is due. */
+export const attentionSchema = attentionCheckSchema.extend({
+  /** Null exactly when `needsAttention` is false. */
+  priority: attentionPrioritySchema.nullable(),
 });
 export type Attention = z.infer<typeof attentionSchema>;
 

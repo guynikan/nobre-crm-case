@@ -58,8 +58,19 @@ export function OpportunityCardBody({ opportunity, today }: { opportunity: Oppor
   );
 }
 
+/**
+ * Two weights, not four: the gates decide the order, the stripe only says whether
+ * this one is merely due or has a deadline against it. The card already spells out
+ * which deadline, so repeating it here would only add noise.
+ */
 export function cardClasses(opportunity: Opportunity) {
-  const accent = opportunity.attention.needsAttention ? "border-l-alert-600" : "border-l-transparent";
+  const { priority } = opportunity.attention;
+  const accent =
+    priority === null
+      ? "border-l-transparent"
+      : priority === "OVERDUE_CONTACT"
+        ? "border-l-alert-600"
+        : "border-l-danger-600";
   const finished = opportunity.stage === "LOST" ? "opacity-75" : "";
   return `rounded-md border border-line border-l-4 ${accent} ${finished} bg-white p-3 text-left shadow-sm`;
 }
