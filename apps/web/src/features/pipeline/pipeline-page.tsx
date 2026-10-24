@@ -22,21 +22,13 @@ export function PipelinePage() {
 
   const meta = useMeta();
   const list = useOpportunityList(deferredFilters);
-  // Same query the "attention" toggle would run, so its badge always matches the board.
-  const attention = useOpportunityList({ ...deferredFilters, needsAttention: true, stage: undefined });
 
   const open = (id: string) => update({ opportunity: id });
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] flex-col">
       <div className="space-y-3 px-6 py-4">
-        <FilterBar
-          filters={filters}
-          view={view}
-          update={update}
-          hasActiveFilters={hasActiveFilters}
-          attentionTotal={attention.data?.total}
-        />
+        <FilterBar filters={filters} view={view} update={update} hasActiveFilters={hasActiveFilters} />
         <div className="flex h-5 items-center gap-3 text-sm text-muted" aria-live="polite">
           {list.data ? (
             <span>

@@ -8,7 +8,6 @@ import { useCallback, useMemo, useTransition } from "react";
 export interface OpportunityFilters {
   search: string;
   sellerId: string | undefined;
-  needsAttention: boolean;
   stage: Stage | undefined;
 }
 
@@ -18,7 +17,6 @@ export type BoardView = "board" | "list";
 const PARAM = {
   search: "q",
   sellerId: "seller",
-  needsAttention: "attention",
   stage: "stage",
   view: "view",
   opportunity: "opportunity",
@@ -38,7 +36,6 @@ export function useOpportunityFilters() {
     return {
       search: params.get(PARAM.search)?.trim() ?? "",
       sellerId: params.get(PARAM.sellerId) || undefined,
-      needsAttention: params.get(PARAM.needsAttention) === "1",
       // The stage filter only makes sense in the list: the board already splits by stage.
       stage: view === "list" && stage.success ? stage.data : undefined,
     };
@@ -58,7 +55,7 @@ export function useOpportunityFilters() {
     [params, pathname, router],
   );
 
-  const hasActiveFilters = filters.search !== "" || !!filters.sellerId || filters.needsAttention || !!filters.stage;
+  const hasActiveFilters = filters.search !== "" || !!filters.sellerId || !!filters.stage;
 
   return {
     filters,

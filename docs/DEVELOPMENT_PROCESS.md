@@ -118,17 +118,25 @@ O quadro está dividido em três módulos: `board.tsx` guarda apenas o `DndConte
 
 A divisão seguiu o motivo de mudança, não o tamanho do arquivo. A medição de rolagem virou um componente genérico em `shared/ui/scroll-fade.tsx`, porque nada nela é específico do funil e outra lista horizontal poderia reaproveitá-la. Coluna e card ficaram em `features/pipeline`, já que dependem do estado do arrasto e dos rótulos de etapa, e promovê-los a compartilhados só criaria acoplamento sem reuso real.
 
+### Lembrete como notificação, não como seção
+
+Os lembretes não têm seção própria, e a distinção que sustenta isso é entre estado e tarefa. Atenção é propriedade do funil no instante em que se olha, calculada a cada requisição. Lembrete é registro: nasce de um job, tem `dueOn`, `status` e `resolvedAt`, e só se encerra por um fato de negócio — contato registrado ou oportunidade finalizada. Quem organiza o trabalho é o quadro; o lembrete serve para que algo criado enquanto ninguém olhava não passe despercebido. Isso é notificação, e uma aba de navegação prometeria um lugar onde se trabalha.
+
+Eles vivem num sino no cabeçalho, com a contagem de abertos sempre visível, abrindo um painel com os abertos, os encerrados e o disparo manual do job. Não há rota por trás: o funil é a única tela. Um lembrete novo chega como toast e soma uma contagem ao título da aba, que é o que alcança o operador quando ele está em outra aba do navegador. A contagem some quando o painel é aberto, não quando a aba volta ao foco — zerar no retorno esconderia justamente o aviso que foi levantado.
+
+Normalmente notificação exige identidade, e o enunciado dispensa autenticação. Aqui isso não é obstáculo porque o lembrete não tem estado de leitura por usuário: ele é aberto ou encerrado, e quem o encerra é a regra, não um clique. O painel mostra os abertos, e nada depende de saber quem está olhando.
+
 ### Orientação do usuário
 
 Não há tour guiado, modal de boas-vindas nem fluxo de onboarding. O critério do enunciado é se o vendedor encontra rápido a negociação que precisa trabalhar hoje, e um CRM interno de time pequeno não tem o problema de descoberta que justificaria esse tipo de fluxo. Se o quadro precisasse de um tour para ser compreendido, o problema estaria no quadro.
 
 A orientação foi colocada onde a dúvida aparece:
 
-- O cabeçalho da página de lembretes explica em uma frase qual regra gerou aquela lista e em que situações um lembrete se encerra sozinho.
+- O painel de lembretes explica em uma frase qual regra gerou aquela lista e em que situações um lembrete se encerra sozinho.
 - Os estados vazios informam a causa, não apenas a ausência. Filtro sem resultado sugere limpar os filtros; banco sem dados aponta o comando de seed; nenhum lembrete aberto é descrito como todas as oportunidades em aberto terem tido contato recente.
 - O card diz em palavras por que exige atenção, como “9 dias sem contato” ou “Nenhum contato registrado”, em vez de depender apenas da cor da borda.
 - Um destino inválido no arrastar e soltar é recusado com a lista das etapas alcançáveis a partir da etapa atual, e as colunas bloqueadas ficam esmaecidas durante o arrasto.
-- A data de negócio fixa do case aparece no cabeçalho e explica, no próprio título, por que não é a data real.
+- O cabeçalho mostra a data de negócio usada nos cálculos, que é a referência de todo "dias sem contato" exibido no quadro.
 
 O custo da escolha é que nada ensina a interface de forma ativa: quem abre o app pela primeira vez descobre as regras conforme esbarra nelas. Para um time que usa a ferramenta todo dia, esse custo é pago uma vez; para um produto self-service, a conclusão provavelmente seria outra.
 
@@ -152,7 +160,7 @@ pnpm test
 pnpm build
 ```
 
-As três concluíram com sucesso no estado final da implementação. A suíte de testes inclui 60 testes de domínio e 20 de integração contra PostgreSQL, entre follow-up e o espelho SQL da prioridade. O build gera o bundle da API e as rotas Next.js `/` e `/lembretes`.
+As três concluíram com sucesso no estado final da implementação. A suíte de testes inclui 60 testes de domínio e 20 de integração contra PostgreSQL, entre follow-up e o espelho SQL da prioridade. O build gera o bundle da API e a rota Next.js `/`.
 
 Também foram registradas verificações manuais da interface para arrastar e soltar, rollback após um `409`, diálogo de motivo de perda, filtros na URL, encerramento de lembrete por contato e execução manual do follow-up. Essas verificações complementam, e não substituem, os testes automatizados das regras críticas.
 

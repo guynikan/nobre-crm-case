@@ -23,7 +23,6 @@ export function useOpportunityList(filters: OpportunityFilters) {
           search: filters.search || undefined,
           sellerId: filters.sellerId,
           stage: filters.stage,
-          needsAttention: filters.needsAttention ? true : undefined,
         },
       }),
     // Keep showing the previous result while a new filter loads, instead of flashing a skeleton.

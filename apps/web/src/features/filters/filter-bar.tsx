@@ -14,13 +14,11 @@ export function FilterBar({
   view,
   update,
   hasActiveFilters,
-  attentionTotal,
 }: {
   filters: OpportunityFilters;
   view: BoardView;
   update: (patch: UrlPatch) => void;
   hasActiveFilters: boolean;
-  attentionTotal: number | undefined;
 }) {
   const sellers = useSellers();
   // The input owns its text so typing never waits for the URL or the network.
@@ -87,30 +85,12 @@ export function FilterBar({
         </>
       ) : null}
 
-      <button
-        type="button"
-        aria-pressed={filters.needsAttention}
-        onClick={() => update({ needsAttention: filters.needsAttention ? null : "1" })}
-        className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition ${
-          filters.needsAttention
-            ? "border-alert-600 bg-alert-600 text-white"
-            : "border-alert-600/40 bg-alert-100 text-alert-600 hover:border-alert-600"
-        }`}
-      >
-        Precisam de atenção hoje
-        {attentionTotal !== undefined ? (
-          <span className={`rounded-full px-1.5 font-mono text-xs ${filters.needsAttention ? "bg-white/25" : "bg-white"}`}>
-            {attentionTotal}
-          </span>
-        ) : null}
-      </button>
-
       {hasActiveFilters ? (
         <button
           type="button"
           onClick={() => {
             setSearch("");
-            update({ search: null, sellerId: null, needsAttention: null, stage: null });
+            update({ search: null, sellerId: null, stage: null });
           }}
           className="text-sm text-nobre-700 underline-offset-2 hover:underline"
         >
