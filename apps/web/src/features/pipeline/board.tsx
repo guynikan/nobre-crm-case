@@ -9,6 +9,7 @@ import {
   useSensors,
   type Announcements,
   type DragEndEvent,
+  type DragOverEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { isFinalStage, PIPELINE_STAGES, type CalendarDate, type Opportunity, type Stage } from "@nobre/contracts";
@@ -52,7 +53,9 @@ export function PipelineBoard({ opportunities, today, thresholdDays, onOpen, onC
   const move = useMoveStage();
   const toast = useToast();
   const [active, setActive] = useState<Opportunity | null>(null);
+  const [returningFinalId, setReturningFinalId] = useState<string | null>(null);
   const [pendingLost, setPendingLost] = useState<Opportunity | null>(null);
+  const rejectedFinalDrag = useRef(false);
   const sensors = useSensors(
     // A short distance keeps a click on the card as "open details" instead of a drag.
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -85,14 +88,35 @@ export function PipelineBoard({ opportunities, today, thresholdDays, onOpen, onC
   };
 
   function handleDragStart({ active: dragged }: DragStartEvent) {
+    rejectedFinalDrag.current = false;
+    setReturningFinalId(null);
     setActive(byId.get(String(dragged.id)) ?? null);
+  }
+
+  function handleDragOver({ active: dragged, over }: DragOverEvent) {
+    const opportunity = byId.get(String(dragged.id));
+    if (!opportunity || !isFinalStage(opportunity.stage) || rejectedFinalDrag.current) return;
+    if (over?.id === opportunity.stage) return;
+
+    rejectedFinalDrag.current = true;
+    setReturningFinalId(opportunity.id);
+    toast.info("Movimento não permitido", refusalMessage(opportunity.stage, opportunity.stage));
   }
 
   function handleDragEnd({ active: dragged, over }: DragEndEvent) {
     setActive(null);
     lastDragEnd.current = Date.now();
     const opportunity = byId.get(String(dragged.id));
-    if (!opportunity || !over) return;
+    setReturningFinalId(null);
+    if (!opportunity) return;
+    if (isFinalStage(opportunity.stage)) {
+      if (!rejectedFinalDrag.current && over?.id !== opportunity.stage) {
+        toast.info("Movimento não permitido", refusalMessage(opportunity.stage, opportunity.stage));
+      }
+      rejectedFinalDrag.current = false;
+      return;
+    }
+    if (!over) return;
     const toStage = over.id as Stage;
     if (toStage === opportunity.stage) return;
     if (!reachableStages(opportunity.stage).includes(toStage)) {
@@ -110,9 +134,12 @@ export function PipelineBoard({ opportunities, today, thresholdDays, onOpen, onC
     <DndContext
       sensors={sensors}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
       onDragCancel={() => {
         setActive(null);
+        setReturningFinalId(null);
+        rejectedFinalDrag.current = false;
         lastDragEnd.current = Date.now();
       }}
       accessibility={{
@@ -153,6 +180,7 @@ export function PipelineBoard({ opportunities, today, thresholdDays, onOpen, onC
                 today={today}
                 onOpen={openUnlessJustDragged}
                 isMoving={movingIds.has(opportunity.id)}
+                isReturning={returningFinalId === opportunity.id}
               />
             ))}
           </BoardColumn>
@@ -160,7 +188,7 @@ export function PipelineBoard({ opportunities, today, thresholdDays, onOpen, onC
       </ScrollFade>
 
       <DragOverlay dropAnimation={null}>
-        {active ? (
+        {active && returningFinalId !== active.id ? (
           <div className={`${cardClasses(active)} w-72 rotate-1 cursor-grabbing shadow-xl`}>
             <OpportunityCardBody opportunity={active} today={today} />
           </div>

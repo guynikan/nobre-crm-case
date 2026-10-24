@@ -4,36 +4,37 @@ import { useDraggable } from "@dnd-kit/core";
 import { isFinalStage, type CalendarDate, type Opportunity } from "@nobre/contracts";
 import { cardClasses, OpportunityCardBody } from "./opportunity-card";
 
-/** An opportunity card that can be dragged between columns, unless its stage is final. */
+/** An opportunity card that can be dragged between columns. */
 export function DraggableCard({
   opportunity,
   today,
   onOpen,
   isMoving,
+  isReturning,
 }: {
   opportunity: Opportunity;
   today: CalendarDate;
   onOpen: (id: string) => void;
   isMoving: boolean;
+  isReturning: boolean;
 }) {
   const isFinal = isFinalStage(opportunity.stage);
   const { setNodeRef, attributes, listeners, isDragging } = useDraggable({
     id: opportunity.id,
-    disabled: isFinal || isMoving,
+    disabled: isMoving,
   });
 
-  // Final cards are not draggable at all, so they should not announce themselves as such.
-  const dragProps = isFinal ? {} : { ...attributes, ...listeners };
+  const dragProps = { ...attributes, ...listeners };
 
   return (
     <div className="relative">
       <article
         ref={setNodeRef}
         {...dragProps}
-        aria-roledescription={isFinal ? undefined : "card arrastável"}
+        aria-roledescription="card arrastável"
         aria-label={`${opportunity.code} ${opportunity.companyName}`}
         onClick={() => onOpen(opportunity.id)}
-        className={`${cardClasses(opportunity)} ${isFinal ? "cursor-pointer select-none" : "cursor-grab"} transition hover:border-nobre-500/60 ${isDragging ? "opacity-30" : ""} ${isMoving ? "animate-pulse" : ""}`}
+        className={`${cardClasses(opportunity)} cursor-grab ${isFinal ? "select-none" : ""} transition hover:border-nobre-500/60 ${isDragging && !isReturning ? "opacity-30" : ""} ${isMoving ? "animate-pulse" : ""}`}
       >
         <OpportunityCardBody opportunity={opportunity} today={today} />
       </article>

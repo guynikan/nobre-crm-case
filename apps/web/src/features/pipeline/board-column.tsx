@@ -1,7 +1,7 @@
 "use client";
 
 import { useDroppable } from "@dnd-kit/core";
-import { isFinalStage, type Opportunity, type Stage } from "@nobre/contracts";
+import type { Opportunity, Stage } from "@nobre/contracts";
 import type { ReactNode } from "react";
 import { formatCents, STAGE_LABELS } from "@/shared/format";
 
@@ -23,7 +23,6 @@ export function BoardColumn({
   children: ReactNode;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage });
-  const isFinal = isFinalStage(stage);
   const total = opportunities.reduce((sum, item) => sum + (item.estimatedValueCents ?? 0), 0);
   const attentionCount = opportunities.filter((item) => item.attention.needsAttention).length;
   const stateClasses: Record<DropState, string> = {
@@ -41,17 +40,7 @@ export function BoardColumn({
     >
       <header className="sticky top-0 border-b border-line px-3 py-2.5">
         <div className="flex items-baseline justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-2">
-            <h2 className="truncate text-sm font-semibold">{STAGE_LABELS[stage]}</h2>
-            {isFinal ? (
-              <span
-                title="As oportunidades desta etapa não podem ser movidas"
-                className="shrink-0 rounded border border-line bg-paper px-1.5 py-0.5 text-[10px] font-medium leading-none text-muted"
-              >
-                Final · não movível
-              </span>
-            ) : null}
-          </div>
+          <h2 className="text-sm font-semibold">{STAGE_LABELS[stage]}</h2>
           <span className="font-mono text-xs text-muted">{opportunities.length}</span>
         </div>
         <div className="mt-0.5 flex items-center justify-between text-xs text-muted">
