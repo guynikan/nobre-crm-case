@@ -1,11 +1,12 @@
 import { withTransaction, type Db } from "./pool.js";
+import type { CalendarDate } from "@nobre/contracts";
 import type pg from "pg";
 import {
   applyCorrections,
   CASE_CORRECTIONS,
   CASE_OPPORTUNITIES_AS_GIVEN,
-  CASE_REFERENCE_DATE,
   CASE_SELLERS,
+  shiftOnto,
   type SeedOpportunity,
 } from "./seed/case-data.js";
 import { buildSyntheticOpportunities, SYNTHETIC_SELLERS } from "./seed/synthetic.js";
@@ -14,16 +15,14 @@ export const SYNTHETIC_COUNT = 80;
 
 export interface SeedOptions {
   synthetic: boolean;
-  /** Anchor for synthetic dates; defaults to the case reference date. */
-  referenceDate?: string;
+  /** The date every seeded row is positioned against, normally the real today. */
+  today: CalendarDate;
 }
 
 /** Wipes business data and loads the case (plus, optionally, synthetic data). Dev/test only. */
 export async function seed(db: Db, options: SeedOptions): Promise<{ case: number; synthetic: number }> {
-  const caseRows = applyCorrections(CASE_OPPORTUNITIES_AS_GIVEN, CASE_CORRECTIONS);
-  const syntheticRows = options.synthetic
-    ? buildSyntheticOpportunities(SYNTHETIC_COUNT, options.referenceDate ?? CASE_REFERENCE_DATE)
-    : [];
+  const caseRows = shiftOnto(applyCorrections(CASE_OPPORTUNITIES_AS_GIVEN, CASE_CORRECTIONS), options.today);
+  const syntheticRows = options.synthetic ? buildSyntheticOpportunities(SYNTHETIC_COUNT, options.today) : [];
 
   await withTransaction(db, async (client) => {
     await client.query(

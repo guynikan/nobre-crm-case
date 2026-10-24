@@ -113,7 +113,9 @@ As sete oportunidades fornecidas pelo case são preservadas em `CASE_OPPORTUNITI
 
 Os dados de origem não foram normalizados silenciosamente. A `OPP-2007` chegou como Perdida sem o motivo exigido pela nova regra, então a seed registra de forma explícita a correção “Motivo não registrado na carga original.” Outras entradas atípicas, como propostas vencidas e campos em branco, continuam visíveis como dados ou alertas, em vez de serem inventadas ou apagadas. A tabela completa está no [README](../README.md#inconsist%C3%AAncias-da-carga-inicial-e-como-foram-tratadas).
 
-Para tornar o resultado reproduzível, a data de negócio usa por padrão `2026-10-15`, a data de referência do case. Ela pode ser removida para usar a data real.
+A data de referência do case, `2026-10-15`, é o que torna os dados legíveis: "dias sem contato" e "proposta vencida" só significam algo em relação a um hoje. Congelar a data de negócio resolveria isso, mas envelheceria: poucos dias depois o cabeçalho anunciaria uma data que não é a de ninguém.
+
+A carga desloca as linhas do enunciado para o dia em que o seed roda, somando a cada data a diferença entre a data de referência e hoje. Os intervalos são preservados, então a `OPP-2002` tem 9 dias sem contato em qualquer execução, e a tabela em `CASE_OPPORTUNITIES_AS_GIVEN` continua idêntica ao PDF — o deslocamento é da carga, não do dado de origem. O preço é que as datas exibidas não coincidem, uma a uma, com as do enunciado; em troca, o relógio de negócio é o relógio real, sem variável de ambiente para configurar.
 
 ## Validação
 

@@ -34,9 +34,8 @@ export function AppHeader() {
         </nav>
       </div>
       {meta.data ? (
-        <p className="text-sm text-nobre-100/80" title={meta.data.isTodayFixed ? "Data fixa do case, para os cálculos baterem com o enunciado" : undefined}>
+        <p className="text-sm text-nobre-100/80">
           Hoje: <span className="font-mono text-white">{formatDate(meta.data.today)}</span>
-          {meta.data.isTodayFixed ? <span className="ml-1.5 text-xs">(data do case)</span> : null}
         </p>
       ) : null}
     </header>

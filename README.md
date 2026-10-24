@@ -39,9 +39,11 @@ Verificação: `pnpm typecheck`, `pnpm test` e `pnpm build` na raiz. O teste de 
 
 Follow-up manual pelo terminal: `pnpm follow-up:run` (o mesmo job que o agendador roda).
 
-### A data de hoje é fixa
+### As datas do case acompanham o dia de hoje
 
-Os dados do case são de 15/10/2026, e "dias sem contato" depende de "hoje". Por isso `BUSINESS_TODAY=2026-10-15` congela a data de negócio. A API expõe essa data em `GET /meta`, e o cabeçalho do front mostra "Hoje: 15/10/2026 (data do case)". Para usar a data real, deixe `BUSINESS_TODAY` vazio. O fuso de negócio é `America/Sao_Paulo`.
+Os dados do case são de 15/10/2026, e "dias sem contato" depende de "hoje". Em vez de congelar a data de negócio, o seed desloca as sete linhas do enunciado para a data em que roda, preservando todos os intervalos entre elas: a `OPP-2002` fica com 9 dias sem contato e a proposta da `OPP-2004` continua vencida, em qualquer dia que você execute o seed.
+
+A tabela em `CASE_OPPORTUNITIES_AS_GIVEN` permanece idêntica ao PDF; o deslocamento acontece na carga, em `shiftOnto`. Rode `pnpm db:seed` de novo para reposicionar os dados no dia atual. O fuso de negócio é `America/Sao_Paulo`.
 
 ## O que tem na tela
 

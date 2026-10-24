@@ -8,12 +8,14 @@ import { fixedClock, type Clock } from "../src/shared/clock.js";
 
 const url = process.env.TEST_DATABASE_URL;
 const THRESHOLD = 2;
+// The clock and the seed must agree, or the gaps the assertions below rely on shift.
+const TODAY = "2026-10-15";
 
 // Runs the real SQL against a dedicated database: idempotency lives in the schema and the
 // transaction, so a pure unit test (see @nobre/domain follow-up.test.ts) is not enough.
 describe.skipIf(!url)("follow-up automation (PostgreSQL)", () => {
   const db = createPool(url ?? "");
-  let clock: Clock = fixedClock("2026-10-15");
+  let clock: Clock = fixedClock(TODAY);
   const clockProxy: Clock = { now: () => clock.now(), today: () => clock.today() };
   const followUp = createFollowUpService({ db, clock: clockProxy, attentionThresholdDays: THRESHOLD });
   const opportunities = createOpportunityService({ db, clock: clockProxy, attentionThresholdDays: THRESHOLD });
@@ -24,9 +26,9 @@ describe.skipIf(!url)("follow-up automation (PostgreSQL)", () => {
     (await db.query<{ id: string }>("SELECT id FROM opportunities WHERE code = $1", [code])).rows[0]!.id;
 
   beforeEach(async () => {
-    clock = fixedClock("2026-10-15");
+    clock = fixedClock(TODAY);
     await migrate(db, () => {});
-    await seed(db, { synthetic: false });
+    await seed(db, { synthetic: false, today: TODAY });
   });
 
   afterAll(() => db.end());

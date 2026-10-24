@@ -7,10 +7,10 @@ export interface Clock {
   today(): CalendarDate;
 }
 
-export function systemClock(timeZone: string, fixedToday: CalendarDate | null): Clock {
+export function systemClock(timeZone: string): Clock {
   return {
     now: () => new Date(),
-    today: () => fixedToday ?? calendarDateIn(new Date(), timeZone),
+    today: () => calendarDateIn(new Date(), timeZone),
   };
 }
 

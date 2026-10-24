@@ -57,7 +57,6 @@ export async function buildApp({ config, db, clock, logger = true }: AppDeps) {
     db,
     clock,
     timeZone: config.businessTimeZone,
-    isTodayFixed: config.businessToday !== null,
     attentionThresholdDays: config.attentionThresholdDays,
   });
   await app.register(sellerRoutes, { db });

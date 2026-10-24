@@ -8,7 +8,7 @@ const config = loadConfig();
 const db = createPool(config.databaseUrl);
 const service = createFollowUpService({
   db,
-  clock: systemClock(config.businessTimeZone, config.businessToday),
+  clock: systemClock(config.businessTimeZone),
   attentionThresholdDays: config.attentionThresholdDays,
   ...(config.followUpWebhookUrl ? { notify: webhookNotifier(config.followUpWebhookUrl) } : {}),
 });

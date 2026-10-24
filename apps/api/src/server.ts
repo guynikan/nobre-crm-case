@@ -6,7 +6,7 @@ import { systemClock } from "./shared/clock.js";
 
 const config = loadConfig();
 const db = createPool(config.databaseUrl);
-const clock = systemClock(config.businessTimeZone, config.businessToday);
+const clock = systemClock(config.businessTimeZone);
 const { app, followUp } = await buildApp({ config, db, clock });
 
 const job = scheduleFollowUpJob({

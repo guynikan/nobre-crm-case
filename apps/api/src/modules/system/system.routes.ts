@@ -7,9 +7,8 @@ export const systemRoutes: FastifyPluginAsyncZod<{
   db: Db;
   clock: Clock;
   timeZone: string;
-  isTodayFixed: boolean;
   attentionThresholdDays: number;
-}> = async (app, { db, clock, timeZone, isTodayFixed, attentionThresholdDays }) => {
+}> = async (app, { db, clock, timeZone, attentionThresholdDays }) => {
   app.get(
     "/health",
     { config: { rateLimit: false }, schema: { tags: ["system"], response: { 200: healthSchema, 503: healthSchema } } },
@@ -27,6 +26,6 @@ export const systemRoutes: FastifyPluginAsyncZod<{
   app.get(
     "/meta",
     { schema: { tags: ["system"], summary: "Business date and rules the UI must agree with", response: { 200: appMetaSchema } } },
-    async () => ({ today: clock.today(), isTodayFixed, timeZone, attentionThresholdDays }),
+    async () => ({ today: clock.today(), timeZone, attentionThresholdDays }),
   );
 };

@@ -1,4 +1,5 @@
 import type { CalendarDate, Stage } from "@nobre/contracts";
+import { addDays, daysBetween } from "@nobre/domain";
 
 export interface SeedOpportunity {
   code: string;
@@ -126,6 +127,22 @@ export const CASE_CORRECTIONS: readonly SeedCorrection[] = [
     why: "LOST requires a reason; the source row has none, so the gap is made explicit instead of weakening the rule.",
   },
 ];
+
+/**
+ * Moves the rows from the PDF reference date onto `today`, keeping every gap
+ * between dates intact. The table above stays byte-identical to the case, while
+ * the seeded database always reads as if the case were happening now.
+ */
+export function shiftOnto(rows: readonly SeedOpportunity[], today: CalendarDate): SeedOpportunity[] {
+  const offset = daysBetween(CASE_REFERENCE_DATE, today);
+  const shift = (date: CalendarDate | null) => (date === null ? null : addDays(date, offset));
+  return rows.map((row) => ({
+    ...row,
+    lastContactOn: shift(row.lastContactOn),
+    proposalValidUntil: shift(row.proposalValidUntil),
+    eventDate: shift(row.eventDate),
+  }));
+}
 
 export function applyCorrections(
   rows: readonly SeedOpportunity[],
