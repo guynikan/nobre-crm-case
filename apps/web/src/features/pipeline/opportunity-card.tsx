@@ -1,6 +1,6 @@
 "use client";
 
-import type { CalendarDate, Opportunity } from "@nobre/contracts";
+import type { AttentionPriority, CalendarDate, Opportunity } from "@nobre/contracts";
 import { daysBetween } from "@nobre/domain";
 import { attentionLabel, formatCents, formatQuantity, formatShortDate } from "@/shared/format";
 
@@ -59,18 +59,17 @@ export function OpportunityCardBody({ opportunity, today }: { opportunity: Oppor
 }
 
 /**
- * Two weights, not four: the gates decide the order, the stripe only says whether
- * this one is merely due or has a deadline against it. The card already spells out
- * which deadline, so repeating it here would only add noise.
+ * Two weights, not four: the gates decide the order, the stripe only says whether this
+ * one is merely due or has a deadline against it. Both the board and the list use it,
+ * so a row and a card never disagree on how loud the same opportunity is.
  */
+export function priorityAccent(priority: AttentionPriority | null): string {
+  if (priority === null) return "border-l-transparent";
+  return priority === "OVERDUE_CONTACT" ? "border-l-alert-600" : "border-l-danger-600";
+}
+
 export function cardClasses(opportunity: Opportunity) {
-  const { priority } = opportunity.attention;
-  const accent =
-    priority === null
-      ? "border-l-transparent"
-      : priority === "OVERDUE_CONTACT"
-        ? "border-l-alert-600"
-        : "border-l-danger-600";
   const finished = opportunity.stage === "LOST" ? "opacity-75" : "";
-  return `rounded-md border border-line border-l-4 ${accent} ${finished} bg-white p-3 text-left shadow-sm`;
+  // The card already spells out which deadline, so repeating it here would only add noise.
+  return `rounded-md border border-line border-l-4 ${priorityAccent(opportunity.attention.priority)} ${finished} bg-white p-3 text-left shadow-sm`;
 }

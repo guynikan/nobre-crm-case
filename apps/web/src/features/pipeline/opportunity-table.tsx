@@ -2,7 +2,7 @@
 
 import type { CalendarDate, Opportunity } from "@nobre/contracts";
 import { attentionLabel, formatCents, formatDate, STAGE_LABELS } from "@/shared/format";
-import { dateWarnings } from "./opportunity-card";
+import { dateWarnings, priorityAccent } from "./opportunity-card";
 
 /** Dense alternative to the board: same order as the API (what needs action first). */
 export function OpportunityTable({
@@ -33,7 +33,11 @@ export function OpportunityTable({
             const warnings = dateWarnings(opportunity, today);
             return (
               <tr key={opportunity.id} className="border-b border-line/70 last:border-0 hover:bg-nobre-100/40">
-                <td className="px-3 py-2 font-mono text-xs text-muted">{opportunity.code}</td>
+                <td
+                  className={`border-l-4 py-2 pr-3 pl-2 font-mono text-xs text-muted ${priorityAccent(opportunity.attention.priority)}`}
+                >
+                  {opportunity.code}
+                </td>
                 <td className="px-3 py-2">
                   <button type="button" onClick={() => onOpen(opportunity.id)} className="text-left font-medium hover:underline">
                     {opportunity.companyName}
