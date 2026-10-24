@@ -9,13 +9,12 @@ import {
   useSensors,
   type Announcements,
   type DragEndEvent,
-  type DragOverEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { isFinalStage, PIPELINE_STAGES, type CalendarDate, type Opportunity, type Stage } from "@nobre/contracts";
 import { reachableStages } from "@nobre/domain";
 import { useMutationState } from "@tanstack/react-query";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { STAGE_LABELS } from "@/shared/format";
 import { ScrollFade } from "@/shared/ui/scroll-fade";
 import { useToast } from "@/shared/ui/toast";
@@ -93,15 +92,29 @@ export function PipelineBoard({ opportunities, today, thresholdDays, onOpen, onC
     setActive(byId.get(String(dragged.id)) ?? null);
   }
 
-  function handleDragOver({ active: dragged, over }: DragOverEvent) {
-    const opportunity = byId.get(String(dragged.id));
-    if (!opportunity || !isFinalStage(opportunity.stage) || rejectedFinalDrag.current) return;
-    if (over?.id === opportunity.stage) return;
+  useEffect(() => {
+    if (!active || !isFinalStage(active.stage) || rejectedFinalDrag.current) return;
 
-    rejectedFinalDrag.current = true;
-    setReturningFinalId(opportunity.id);
-    toast.info("Movimento não permitido", refusalMessage(opportunity.stage, opportunity.stage));
-  }
+    const sourceColumn = document.querySelector<HTMLElement>(`[data-stage="${active.stage}"]`);
+    if (!sourceColumn) return;
+
+    const onPointerMove = (event: PointerEvent) => {
+      const bounds = sourceColumn.getBoundingClientRect();
+      const insideColumn =
+        event.clientX >= bounds.left &&
+        event.clientX <= bounds.right &&
+        event.clientY >= bounds.top &&
+        event.clientY <= bounds.bottom;
+      if (insideColumn || rejectedFinalDrag.current) return;
+
+      rejectedFinalDrag.current = true;
+      setReturningFinalId(active.id);
+      toast.info("Movimento não permitido", refusalMessage(active.stage, active.stage));
+    };
+
+    window.addEventListener("pointermove", onPointerMove);
+    return () => window.removeEventListener("pointermove", onPointerMove);
+  }, [active, toast]);
 
   function handleDragEnd({ active: dragged, over }: DragEndEvent) {
     setActive(null);
@@ -134,7 +147,6 @@ export function PipelineBoard({ opportunities, today, thresholdDays, onOpen, onC
     <DndContext
       sensors={sensors}
       onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
       onDragCancel={() => {
         setActive(null);

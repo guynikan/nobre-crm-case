@@ -35,6 +35,7 @@ export function BoardColumn({
   return (
     <section
       ref={setNodeRef}
+      data-stage={stage}
       aria-label={STAGE_LABELS[stage]}
       className={`flex w-72 shrink-0 flex-col rounded-lg border bg-panel/80 transition ${stateClasses[dropState]} ${stage === "LOST" ? "bg-paper/60" : ""}`}
     >
