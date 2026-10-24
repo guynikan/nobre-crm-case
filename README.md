@@ -47,11 +47,12 @@ A tabela em `CASE_OPPORTUNITIES_AS_GIVEN` permanece idêntica ao PDF; o deslocam
 
 ## O que tem na tela
 
-- **Funil (`/`):** Kanban com uma coluna por etapa e mais a coluna Perdida. Cada coluna mostra o total, a soma dos valores e quantas oportunidades precisam de atenção. O card mostra valor, brinde e quantidade, vendedor, dias sem contato e alertas de data (proposta vencida, evento passado ou nos próximos 7 dias). A faixa lateral do card distingue o que está só vencido do que tem prazo contra, e os cards saem ordenados pelos portões de urgência.
+- **Funil (`/`):** Kanban com uma coluna por etapa e mais a coluna Perdida. Cada coluna mostra o total, a soma dos valores e quantas oportunidades precisam de atenção. O card mostra valor, brinde e quantidade, vendedor, dias sem contato e alertas de data (proposta vencida, evento passado ou nos próximos 7 dias). A faixa lateral usa três níveis: vermelho para oportunidade sem contato ou com evento iminente, âmbar para proposta vencida e tom suave para contato atrasado. Os cards saem ordenados pelos portões de urgência.
 - **Arrastar card:** enquanto você arrasta, as colunas permitidas ficam destacadas e as proibidas ficam apagadas. Soltar numa coluna proibida explica o porquê sem chamar a API. Soltar em Perdida abre um diálogo que exige o motivo. A mudança aparece na hora (update otimista). Se a API recusar, o card volta e uma mensagem em pt-BR diz o motivo. O teclado também funciona: espaço, setas e espaço.
 - **Busca e filtros:** empresa ou código, vendedor e, na visão de lista, etapa. Tudo fica na URL (`?q=pulso&view=list`), então um link compartilhado abre a mesma visão. Não há filtro de atenção: a urgência rege a ordem e a cor do quadro inteiro, em vez de ser um recorte opcional.
-- **Detalhe (drawer):** dados comerciais, itens, edição de valor, itens, validade da proposta e data do evento, registro de contato, botões das etapas permitidas (alternativa acessível ao arrasto) e histórico de etapas.
+- **Detalhe (drawer):** dados comerciais, itens, edição de valor e datas, registro de contato, botões das etapas permitidas (alternativa acessível ao arrasto) e histórico de etapas.
 - **Lembretes (sino no cabeçalho):** painel de trabalho com os lembretes abertos e o botão "Verificar agora". Lembretes encerrados não aparecem no painel; o sino mostra quantos continuam abertos. Um lembrete novo chega como toast e vira contagem no título da aba enquanto ninguém olha — não existe rota separada para isso.
+- **Criar oportunidade:** botão "Nova oportunidade" no funil. A oportunidade começa em Primeiro Contato; vendedor, valor, brindes, validade da proposta e data do evento podem ser preenchidos no cadastro ou depois.
 - **Estados:** esqueleto no carregamento, erro com "Tentar de novo", vazio com mensagem e indicador "Atualizando…" quando os dados anteriores continuam na tela.
 
 ## Decisões
@@ -167,7 +168,7 @@ Campos em branco viram `null`, nunca um valor inventado.
 ## Limitações
 
 - Sem autenticação nem perfis (o PDF não exige). Qualquer pessoa com acesso à API pode alterar qualquer oportunidade, e o histórico não registra quem fez a mudança.
-- Não há tela para criar oportunidade. A API tem `POST /opportunities`, mas o fluxo de entrada de leads ficou fora do escopo.
+- A entrada de leads pelo site e sua distribuição automática continuam fora do escopo; novas oportunidades são cadastradas manualmente pelo funil.
 - O painel do sino não oferece histórico de lembretes encerrados; ele mostra somente o que ainda pede ação.
 - Trocar o vendedor de uma oportunidade e corrigir o nome da empresa só pela API. O `PATCH` aceita `sellerId` e `companyName`, mas a interface não expõe os dois; redistribuir carteira é operação de gestor, e sem autenticação não há a quem restringir.
 - O drawer e o painel do sino declaram semântica de diálogo mas não movem o foco ao abrir. Quem navega por leitor de tela continua no conteúdo de trás até chegar neles pelo Tab. O diálogo de motivo de perda usa `<dialog>` nativo e não tem esse problema.
@@ -236,13 +237,13 @@ A implementação foi feita em camadas, de dentro para fora, para que as regras 
 4. Interface Next.js organizada por feature.
 5. Documentação e verificações finais.
 
-Com isso, transições de etapa, cálculo de atenção, prioridade e planejamento de lembretes podem ser testados sem subir a aplicação. As três verificações do repositório — `pnpm typecheck`, `pnpm test` e `pnpm build` — passam no estado final: 60 testes de domínio e 20 de integração contra PostgreSQL, entre follow-up e o espelho SQL da prioridade.
+Com isso, transições de etapa, cálculo de atenção, prioridade e planejamento de lembretes podem ser testados sem subir a aplicação. A suíte tem 60 testes de domínio e 21 casos de integração contra PostgreSQL, entre follow-up e o espelho SQL da prioridade. Os casos de integração são pulados quando `TEST_DATABASE_URL` não está configurada.
 
 As verificações manuais da interface cobriram arrastar e soltar, rollback depois de um `409`, diálogo de motivo de perda, filtros na URL, encerramento de lembrete por contato, execução manual do follow-up e a chegada de um lembrete novo como toast e contagem no título. Elas complementam, e não substituem, os testes automatizados das regras críticas.
 
 ## Uso de IA
 
-O código foi escrito com assistência de IA (Claude Code, com o modelo Claude Opus). Eu defini as decisões técnicas e de produto antes de cada etapa: stack, regras de retorno de etapa, problema escolhido, idempotência, tratamento das inconsistências e arquitetura feature-based. A IA implementou a partir delas, e eu revisei. As regras críticas têm testes automatizados, e a interface foi testada manualmente contra a API e o Postgres locais.
+O código foi escrito com assistência de IA (Claude Code, com o modelo Claude Opus, e Codex em etapas posteriores). Eu defini as decisões técnicas e de produto antes de cada etapa: stack, regras de retorno de etapa, problema escolhido, idempotência, tratamento das inconsistências e arquitetura feature-based. A IA implementou a partir delas, e eu revisei. As regras críticas têm testes automatizados, e a interface foi testada manualmente contra a API e o Postgres locais.
 
 ## Estrutura
 
