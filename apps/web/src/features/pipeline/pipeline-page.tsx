@@ -26,7 +26,8 @@ export function PipelinePage() {
   const open = (id: string) => update({ opportunity: id });
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] flex-col">
+    <div // Fills what the 2.75rem header leaves, so only the columns scroll.
+    className="flex h-[calc(100vh-2.75rem)] flex-col">
       <div className="space-y-3 px-6 py-4">
         <FilterBar filters={filters} view={view} update={update} hasActiveFilters={hasActiveFilters} />
         <div className="flex h-5 items-center gap-3 text-sm text-muted" aria-live="polite">

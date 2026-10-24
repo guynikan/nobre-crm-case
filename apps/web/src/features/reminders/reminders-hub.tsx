@@ -44,9 +44,6 @@ export function RemindersHub({ onNavigate }: { onNavigate: () => void }) {
             {status === "OPEN"
               ? "Retome o contato com quem está esperando."
               : "Encerrados quando o contato foi registrado ou a venda terminou."}
-            {meta.data?.followUpIntervalMinutes
-              ? ` Verificado a cada ${meta.data.followUpIntervalMinutes} minutos.`
-              : ""}
           </p>
         </div>
         <Button onClick={runNow} disabled={run.isPending}>
@@ -107,6 +104,12 @@ export function RemindersHub({ onNavigate }: { onNavigate: () => void }) {
           </ul>
         )}
       </div>
+
+      {meta.data?.followUpIntervalMinutes ? (
+        <footer className="border-t border-line px-4 py-2 text-xs text-muted">
+          Verificado a cada {meta.data.followUpIntervalMinutes} minutos.
+        </footer>
+      ) : null}
     </div>
   );
 }

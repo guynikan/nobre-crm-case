@@ -38,7 +38,7 @@ export function AppHeader() {
   }, [isOpen]);
 
   return (
-    <header className="flex h-14 items-center justify-between bg-nobre-900 px-6 text-white">
+    <header className="flex h-11 items-center justify-between bg-nobre-900 px-6 text-white">
       <Link href="/" className="font-semibold tracking-tight">
         Nobre <span className="font-normal text-nobre-100/70">CRM</span>
       </Link>
