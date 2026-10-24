@@ -5,8 +5,6 @@ import {
   DragOverlay,
   KeyboardSensor,
   PointerSensor,
-  useDraggable,
-  useDroppable,
   useSensor,
   useSensors,
   type Announcements,
@@ -17,9 +15,12 @@ import { isFinalStage, PIPELINE_STAGES, type CalendarDate, type Opportunity, typ
 import { reachableStages } from "@nobre/domain";
 import { useMutationState } from "@tanstack/react-query";
 import { useMemo, useRef, useState } from "react";
-import { formatCents, STAGE_LABELS } from "@/shared/format";
+import { STAGE_LABELS } from "@/shared/format";
+import { ScrollFade } from "@/shared/ui/scroll-fade";
 import { useToast } from "@/shared/ui/toast";
 import { MOVE_STAGE_KEY, useMoveStage, type MoveStageInput } from "./api";
+import { BoardColumn, type DropState } from "./board-column";
+import { DraggableCard } from "./draggable-card";
 import { LostReasonDialog } from "./lost-reason-dialog";
 import { cardClasses, OpportunityCardBody } from "./opportunity-card";
 
@@ -70,6 +71,12 @@ export function PipelineBoard({ opportunities, today, thresholdDays, onOpen }: B
   }, [opportunities]);
 
   const allowedTargets = active ? new Set(reachableStages(active.stage)) : null;
+  const dropStateFor = (stage: Stage): DropState => {
+    if (allowedTargets === null) return "idle";
+    if (allowedTargets.has(stage)) return "allowed";
+    return active?.stage === stage ? "origin" : "blocked";
+  };
+
   // The browser fires a click when a drag ends over the same card; that must not open the drawer.
   const lastDragEnd = useRef(0);
   const openUnlessJustDragged = (id: string) => {
@@ -115,13 +122,17 @@ export function PipelineBoard({ opportunities, today, thresholdDays, onOpen }: B
         },
       }}
     >
-      <div className="board-surface flex min-h-0 flex-1 gap-3 overflow-x-auto px-6 pb-6">
+      <ScrollFade
+        className="min-h-0 flex-1"
+        contentClassName="board-surface flex h-full gap-3 px-6 pb-6"
+        contentKey={opportunities.length}
+      >
         {BOARD_COLUMNS.map((stage) => (
           <BoardColumn
             key={stage}
             stage={stage}
             opportunities={byStage.get(stage) ?? []}
-            dropState={allowedTargets === null ? "idle" : allowedTargets.has(stage) ? "allowed" : active?.stage === stage ? "origin" : "blocked"}
+            dropState={dropStateFor(stage)}
           >
             {(byStage.get(stage) ?? []).map((opportunity) => (
               <DraggableCard
@@ -134,7 +145,7 @@ export function PipelineBoard({ opportunities, today, thresholdDays, onOpen }: B
             ))}
           </BoardColumn>
         ))}
-      </div>
+      </ScrollFade>
 
       <DragOverlay dropAnimation={null}>
         {active ? (
@@ -153,100 +164,5 @@ export function PipelineBoard({ opportunities, today, thresholdDays, onOpen }: B
         }}
       />
     </DndContext>
-  );
-}
-
-type DropState = "idle" | "allowed" | "blocked" | "origin";
-
-function BoardColumn({
-  stage,
-  opportunities,
-  dropState,
-  children,
-}: {
-  stage: Stage;
-  opportunities: Opportunity[];
-  dropState: DropState;
-  children: React.ReactNode;
-}) {
-  const { setNodeRef, isOver } = useDroppable({ id: stage });
-  const total = opportunities.reduce((sum, item) => sum + (item.estimatedValueCents ?? 0), 0);
-  const attentionCount = opportunities.filter((item) => item.attention.needsAttention).length;
-  const stateClasses: Record<DropState, string> = {
-    idle: "border-line",
-    origin: "border-line",
-    allowed: isOver ? "border-nobre-500 bg-nobre-100/70 ring-2 ring-nobre-500/40" : "border-nobre-500 border-dashed",
-    blocked: "border-line opacity-45",
-  };
-
-  return (
-    <section
-      ref={setNodeRef}
-      aria-label={STAGE_LABELS[stage]}
-      className={`flex w-72 shrink-0 flex-col rounded-lg border bg-panel/80 transition ${stateClasses[dropState]} ${stage === "LOST" ? "bg-paper/60" : ""}`}
-    >
-      <header className="sticky top-0 border-b border-line px-3 py-2.5">
-        <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-sm font-semibold">{STAGE_LABELS[stage]}</h2>
-          <span className="font-mono text-xs text-muted">{opportunities.length}</span>
-        </div>
-        <div className="mt-0.5 flex items-center justify-between text-xs text-muted">
-          <span className="font-mono">{formatCents(total)}</span>
-          {attentionCount > 0 ? <span className="font-medium text-alert-600">{attentionCount} precisam de atenção</span> : null}
-        </div>
-        {dropState === "blocked" ? <p className="mt-1 text-xs text-muted">Destino não permitido</p> : null}
-      </header>
-      <div className="flex min-h-24 flex-1 flex-col gap-2 overflow-y-auto p-2">
-        {opportunities.length === 0 ? (
-          <p className="px-1 py-4 text-center text-xs text-muted">Nenhuma oportunidade nesta etapa</p>
-        ) : (
-          children
-        )}
-      </div>
-    </section>
-  );
-}
-
-function DraggableCard({
-  opportunity,
-  today,
-  onOpen,
-  isMoving,
-}: {
-  opportunity: Opportunity;
-  today: CalendarDate;
-  onOpen: (id: string) => void;
-  isMoving: boolean;
-}) {
-  const isFinal = isFinalStage(opportunity.stage);
-  const { setNodeRef, attributes, listeners, isDragging } = useDraggable({
-    id: opportunity.id,
-    disabled: isFinal || isMoving,
-  });
-
-  // Final cards are not draggable at all, so they should not announce themselves as such.
-  const dragProps = isFinal ? {} : { ...attributes, ...listeners };
-
-  return (
-    <div className="relative">
-      <article
-        ref={setNodeRef}
-        {...dragProps}
-        aria-roledescription={isFinal ? undefined : "card arrastável"}
-        aria-label={`${opportunity.code} ${opportunity.companyName}`}
-        onClick={() => onOpen(opportunity.id)}
-        className={`${cardClasses(opportunity)} ${isFinal ? "cursor-pointer" : "cursor-grab"} transition hover:border-nobre-500/60 ${isDragging ? "opacity-30" : ""} ${isMoving ? "animate-pulse" : ""}`}
-      >
-        <OpportunityCardBody opportunity={opportunity} today={today} />
-      </article>
-      {/* Sibling, not child: the draggable card already has role="button". */}
-      <button
-        type="button"
-        onClick={() => onOpen(opportunity.id)}
-        className="sr-only focus:not-sr-only focus:mt-1 focus:block focus:text-xs focus:text-nobre-700 focus:underline"
-      >
-        Abrir detalhes de {opportunity.code}
-      </button>
-    </div>
   );
 }

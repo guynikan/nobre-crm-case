@@ -85,6 +85,14 @@ shared/ui
 
 O React Query controla o estado de servidor. Busca e filtros ficam na URL, portanto um link compartilhado preserva a visualização. O estado local fica limitado às interações da interface. Zustand não foi adicionado de propósito. O quadro usa dnd-kit e aplica uma atualização otimista de etapa, revertendo-a se a API rejeitar a requisição. O drawer de detalhe é carregado sob demanda com `Suspense`; `useDeferredValue` mantém a busca responsiva e `useTransition` é usado na troca de filtros.
 
+Quando as colunas não cabem na viewport, o quadro rola na horizontal em vez de encolhê-las para caber. É o comportamento padrão de quadros kanban e preserva uma largura de coluna em que o card continua legível. O custo é que, em telas menores, as etapas finais ficam fora de vista sem nenhum sinal de que existem.
+
+A alternativa considerada foi reduzir a largura das colunas conforme a viewport, o que elimina a rolagem mas aperta o conteúdo do card. Optou-se por manter a largura e sinalizar a rolagem: as bordas do quadro recebem um gradiente que aparece apenas do lado que ainda esconde conteúdo e some ao chegar no início ou no fim. O gradiente é decorativo (`aria-hidden`, sem captura de ponteiro), portanto não interfere no arrastar e soltar nem na leitura por leitores de tela.
+
+O arquivo do quadro passou a concentrar responsabilidades demais: orquestração de drag and drop, medição de rolagem e dois componentes de apresentação no mesmo módulo. Ele foi dividido em `board.tsx`, que mantém apenas o `DndContext`, as regras de movimento e o overlay, mais `board-column.tsx` e `draggable-card.tsx`.
+
+A divisão seguiu o motivo de mudança, não o tamanho do arquivo. A medição de rolagem virou um componente genérico em `shared/ui/scroll-fade.tsx`, porque nada nela é específico do funil e outra lista horizontal poderia reaproveitá-la. Coluna e card ficaram em `features/pipeline`, já que dependem do estado do arrasto e dos rótulos de etapa, e promovê-los a compartilhados só criaria acoplamento sem reuso real.
+
 ## Tratamento dos dados
 
 As sete oportunidades fornecidas pelo case são preservadas em `CASE_OPPORTUNITIES_AS_GIVEN`. Uma seed determinística separada adiciona 80 registros sintéticos para testar uma faixa maior da interface e das consultas.
