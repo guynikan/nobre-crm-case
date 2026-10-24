@@ -3,12 +3,20 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import type { Db } from "../../db/pool.js";
 import type { Clock } from "../../shared/clock.js";
 
+// A cron of "every N minutes" becomes N. Any other schedule is not an interval the UI can state.
+function intervalMinutesOf(cron: string): number | null {
+  const match = /^\*\/(\d+) \* \* \* \*$/.exec(cron.trim());
+  const minutes = match ? Number(match[1]) : NaN;
+  return Number.isInteger(minutes) && minutes > 0 ? minutes : null;
+}
+
 export const systemRoutes: FastifyPluginAsyncZod<{
   db: Db;
   clock: Clock;
   timeZone: string;
   attentionThresholdDays: number;
-}> = async (app, { db, clock, timeZone, attentionThresholdDays }) => {
+  followUpCron: string;
+}> = async (app, { db, clock, timeZone, attentionThresholdDays, followUpCron }) => {
   app.get(
     "/health",
     { config: { rateLimit: false }, schema: { tags: ["system"], response: { 200: healthSchema, 503: healthSchema } } },
@@ -26,6 +34,11 @@ export const systemRoutes: FastifyPluginAsyncZod<{
   app.get(
     "/meta",
     { schema: { tags: ["system"], summary: "Business date and rules the UI must agree with", response: { 200: appMetaSchema } } },
-    async () => ({ today: clock.today(), timeZone, attentionThresholdDays }),
+    async () => ({
+      today: clock.today(),
+      timeZone,
+      attentionThresholdDays,
+      followUpIntervalMinutes: intervalMinutesOf(followUpCron),
+    }),
   );
 };

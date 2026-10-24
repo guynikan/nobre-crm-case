@@ -44,6 +44,9 @@ export function RemindersHub({ onNavigate }: { onNavigate: () => void }) {
             {status === "OPEN"
               ? "Retome o contato com quem está esperando."
               : "Encerrados quando o contato foi registrado ou a venda terminou."}
+            {meta.data?.followUpIntervalMinutes
+              ? ` Verificado a cada ${meta.data.followUpIntervalMinutes} minutos.`
+              : ""}
           </p>
         </div>
         <Button onClick={runNow} disabled={run.isPending}>

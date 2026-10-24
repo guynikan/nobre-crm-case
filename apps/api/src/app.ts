@@ -58,6 +58,7 @@ export async function buildApp({ config, db, clock, logger = true }: AppDeps) {
     clock,
     timeZone: config.businessTimeZone,
     attentionThresholdDays: config.attentionThresholdDays,
+    followUpCron: config.followUpCron,
   });
   await app.register(sellerRoutes, { db });
   await app.register(opportunityRoutes, { service: opportunities });

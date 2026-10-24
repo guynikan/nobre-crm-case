@@ -6,6 +6,8 @@ export const appMetaSchema = z.object({
   today: calendarDateSchema,
   timeZone: z.string(),
   attentionThresholdDays: z.number().int(),
+  /** Minutes between automatic follow-up runs; null when the schedule is not a plain interval. */
+  followUpIntervalMinutes: z.number().int().positive().nullable(),
 });
 export type AppMeta = z.infer<typeof appMetaSchema>;
 
