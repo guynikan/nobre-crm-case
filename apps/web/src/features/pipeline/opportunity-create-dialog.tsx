@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useSellers } from "@/shared/api/queries";
 import { parseMoneyToCents } from "@/shared/format";
 import { Dialog } from "@/shared/ui/dialog";
-import { Button, inputClass } from "@/shared/ui/fields";
+import { Button, CurrencyInput, inputClass } from "@/shared/ui/fields";
 import { useCreateOpportunity } from "./queries";
 
 interface ItemDraft {
@@ -133,15 +133,14 @@ export function OpportunityCreateDialog({
           </div>
           <div>
             <label htmlFor="new-estimated-value" className="text-xs font-medium text-muted">
-              Valor estimado (R$)
+              Valor estimado
             </label>
-            <input
+            <CurrencyInput
               id="new-estimated-value"
-              className={`${inputClass} mt-1 w-full`}
-              inputMode="decimal"
-              placeholder="4.500,00"
+              className="mt-1"
+              placeholder="0,00"
               value={value}
-              onChange={(event) => setValue(event.target.value)}
+              onValueChange={setValue}
             />
           </div>
         </div>

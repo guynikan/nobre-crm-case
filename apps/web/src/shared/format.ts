@@ -11,9 +11,21 @@ export const STAGE_LABELS: Record<Stage, string> = {
 
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const integer = new Intl.NumberFormat("pt-BR");
+const brlInput = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export function formatCents(cents: number | null): string {
   return cents === null ? "Sem valor" : brl.format(cents / 100);
+}
+
+export function formatCentsForInput(cents: number | null): string {
+  return cents === null ? "" : brlInput.format(cents / 100);
+}
+
+/** Applies a right-to-left BRL input mask, treating the final two digits as cents. */
+export function maskMoneyInput(input: string): string {
+  const digits = input.replace(/\D/g, "");
+  if (!digits) return "";
+  return brlInput.format(Number(digits) / 100);
 }
 
 export function formatQuantity(quantity: number): string {

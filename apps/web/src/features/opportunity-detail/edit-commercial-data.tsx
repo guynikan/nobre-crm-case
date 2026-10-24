@@ -3,8 +3,8 @@
 import type { Opportunity } from "@nobre/contracts";
 import { useState, type FormEvent } from "react";
 import { errorMessage } from "@/shared/api/client";
-import { parseMoneyToCents } from "@/shared/format";
-import { Button, inputClass } from "@/shared/ui/fields";
+import { formatCentsForInput, parseMoneyToCents } from "@/shared/format";
+import { Button, CurrencyInput, inputClass } from "@/shared/ui/fields";
 import { useToast } from "@/shared/ui/toast";
 import { useUpdateOpportunity } from "./queries";
 
@@ -22,9 +22,7 @@ export function EditCommercialData({ opportunity }: { opportunity: Opportunity }
   const update = useUpdateOpportunity(opportunity.id);
   const toast = useToast();
   const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(
-    opportunity.estimatedValueCents === null ? "" : String(opportunity.estimatedValueCents / 100).replace(".", ","),
-  );
+  const [value, setValue] = useState(formatCentsForInput(opportunity.estimatedValueCents));
   const [items, setItems] = useState<ItemDraft[]>(
     opportunity.items.map((item, key) => ({ key, name: item.name, quantity: String(item.quantity) })),
   );
@@ -70,15 +68,14 @@ export function EditCommercialData({ opportunity }: { opportunity: Opportunity }
     <form onSubmit={submit} className="mt-4 space-y-3 rounded-md border border-line p-3">
       <div>
         <label htmlFor="estimated-value" className="text-xs text-muted">
-          Valor estimado (R$)
+          Valor estimado
         </label>
-        <input
+        <CurrencyInput
           id="estimated-value"
-          inputMode="decimal"
-          className={`${inputClass} w-full`}
+          className="mt-1"
           value={value}
-          onChange={(event) => setValue(event.target.value)}
-          placeholder="4.500,00"
+          onValueChange={setValue}
+          placeholder="0,00"
         />
       </div>
       <div className="flex gap-3">
