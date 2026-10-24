@@ -93,6 +93,20 @@ O arquivo do quadro passou a concentrar responsabilidades demais: orquestração
 
 A divisão seguiu o motivo de mudança, não o tamanho do arquivo. A medição de rolagem virou um componente genérico em `shared/ui/scroll-fade.tsx`, porque nada nela é específico do funil e outra lista horizontal poderia reaproveitá-la. Coluna e card ficaram em `features/pipeline`, já que dependem do estado do arrasto e dos rótulos de etapa, e promovê-los a compartilhados só criaria acoplamento sem reuso real.
 
+### Orientação do usuário
+
+Não há tour guiado, modal de boas-vindas nem fluxo de onboarding. O critério do enunciado é se o vendedor encontra rápido a negociação que precisa trabalhar hoje, e um CRM interno de time pequeno não tem o problema de descoberta que justificaria esse tipo de fluxo. Se o quadro precisasse de um tour para ser compreendido, o problema estaria no quadro.
+
+A orientação foi colocada onde a dúvida aparece:
+
+- O cabeçalho da página de lembretes explica em uma frase qual regra gerou aquela lista e em que situações um lembrete se encerra sozinho.
+- Os estados vazios informam a causa, não apenas a ausência. Filtro sem resultado sugere limpar os filtros; banco sem dados aponta o comando de seed; nenhum lembrete aberto é descrito como todas as oportunidades em aberto terem tido contato recente.
+- O card diz em palavras por que exige atenção, como “9 dias sem contato” ou “Nenhum contato registrado”, em vez de depender apenas da cor da borda.
+- Um destino inválido no arrastar e soltar é recusado com a lista das etapas alcançáveis a partir da etapa atual, e as colunas bloqueadas ficam esmaecidas durante o arrasto.
+- A data de negócio fixa do case aparece no cabeçalho e explica, no próprio título, por que não é a data real.
+
+O custo da escolha é que nada ensina a interface de forma ativa: quem abre o app pela primeira vez descobre as regras conforme esbarra nelas. Para um time que usa a ferramenta todo dia, esse custo é pago uma vez; para um produto self-service, a conclusão provavelmente seria outra.
+
 ## Tratamento dos dados
 
 As sete oportunidades fornecidas pelo case são preservadas em `CASE_OPPORTUNITIES_AS_GIVEN`. Uma seed determinística separada adiciona 80 registros sintéticos para testar uma faixa maior da interface e das consultas.
