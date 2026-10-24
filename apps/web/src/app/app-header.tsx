@@ -12,10 +12,9 @@ export function AppHeader() {
   const meta = useMeta();
   const reminders = useReminders("OPEN");
   const openCount = reminders.data?.length ?? 0;
-  const { markSeen } = useReminderNotifications(reminders.data);
-
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { markSeen } = useReminderNotifications(reminders.data, isOpen);
 
   function open() {
     setIsOpen(true);
