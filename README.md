@@ -15,7 +15,7 @@ pnpm install
 
 # 1. Banco (qualquer Postgres local serve; não há Docker obrigatório)
 createdb nobre_crm
-createdb nobre_crm_test        # opcional: só para o teste de integração do follow-up
+createdb nobre_crm_test        # opcional: banco isolado para os testes de integração da API
 
 # 2. Configuração da API (não há credenciais no repositório)
 cp apps/api/.env.example apps/api/.env
@@ -35,7 +35,7 @@ O front usa `http://localhost:3333` por padrão. Para outra URL, crie `apps/web/
 
 Build de produção: `pnpm build`, depois `pnpm start:api` e `pnpm start:web`.
 
-Verificação: `pnpm typecheck`, `pnpm test` e `pnpm build` na raiz. O teste de integração do follow-up roda contra `TEST_DATABASE_URL` e **apaga esse banco**. Se a variável estiver vazia, o teste é pulado.
+Verificação: `pnpm typecheck`, `pnpm test` e `pnpm build` na raiz. Os testes de integração da API rodam contra `TEST_DATABASE_URL` e **apagam esse banco**. Se a variável estiver vazia, eles são pulados.
 
 Follow-up manual pelo terminal: `pnpm follow-up:run` (o mesmo job que o agendador roda).
 
@@ -48,11 +48,11 @@ A tabela em `CASE_OPPORTUNITIES_AS_GIVEN` permanece idêntica ao PDF; o deslocam
 ## O que tem na tela
 
 - **Funil (`/`):** Kanban com uma coluna por etapa e mais a coluna Perdida. Cada coluna mostra o total, a soma dos valores e quantas oportunidades precisam de atenção. O card mostra valor, brinde e quantidade, vendedor, dias sem contato e alertas de data (proposta vencida, evento passado ou nos próximos 7 dias). A faixa lateral usa três níveis: vermelho para oportunidade sem contato ou com evento iminente, âmbar para proposta vencida e tom suave para contato atrasado. Os cards saem ordenados pelos portões de urgência.
-- **Arrastar card:** enquanto você arrasta, as colunas permitidas ficam destacadas e as proibidas ficam apagadas. Soltar numa coluna proibida explica o porquê sem chamar a API. Soltar em Perdida abre um diálogo que exige o motivo. A mudança aparece na hora (update otimista). Se a API recusar, o card volta e uma mensagem em pt-BR diz o motivo. O teclado também funciona: espaço, setas e espaço.
+- **Arrastar card:** etapas finais são marcadas como não movíveis, e seus cards não permitem arrasto nem seleção acidental de texto. Enquanto você arrasta, as colunas permitidas ficam destacadas e as proibidas ficam apagadas. Soltar numa coluna proibida explica o porquê sem chamar a API. Soltar em Perdida abre um diálogo que exige o motivo. A mudança aparece na hora (update otimista). Se a API recusar, o card volta e uma mensagem em pt-BR diz o motivo. O teclado também funciona: espaço, setas e espaço.
 - **Busca e filtros:** empresa ou código, vendedor e, na visão de lista, etapa. Tudo fica na URL (`?q=pulso&view=list`), então um link compartilhado abre a mesma visão. Não há filtro de atenção: a urgência rege a ordem e a cor do quadro inteiro, em vez de ser um recorte opcional.
-- **Detalhe (drawer):** dados comerciais, itens, edição de valor e datas, registro de contato, botões das etapas permitidas (alternativa acessível ao arrasto) e histórico de etapas.
-- **Lembretes (sino no cabeçalho):** painel de trabalho com os lembretes abertos e o botão "Verificar agora". Lembretes encerrados não aparecem no painel; o sino mostra quantos continuam abertos. Um lembrete novo chega como toast e vira contagem no título da aba enquanto ninguém olha — não existe rota separada para isso.
-- **Criar oportunidade:** botão "Nova oportunidade" no funil. A oportunidade começa em Primeiro Contato; vendedor, valor, brindes, validade da proposta e data do evento podem ser preenchidos no cadastro ou depois.
+- **Detalhe (drawer):** dados comerciais, itens, edição de valor e datas com máscara de moeda nos campos monetários, registro de contato, botões das etapas permitidas (alternativa acessível ao arrasto) e histórico de etapas.
+- **Lembretes (sino no cabeçalho):** painel de trabalho com os lembretes abertos e o botão "Verificar agora". O rodapé informa o tempo estimado até a próxima verificação. Lembretes encerrados não aparecem no painel; o sino mostra quantos continuam abertos. Um lembrete novo chega como toast e vira contagem no título da aba enquanto ninguém olha — não existe rota separada para isso.
+- **Criar oportunidade:** botão "Nova oportunidade" no funil. A oportunidade começa em Primeiro Contato; vendedor, valor, brindes, validade da proposta e data do evento podem ser preenchidos no cadastro ou depois. Os campos monetários usam máscara de moeda brasileira.
 - **Estados:** esqueleto no carregamento, erro com "Tentar de novo", vazio com mensagem e indicador "Atualizando…" quando os dados anteriores continuam na tela.
 
 ## Decisões
@@ -123,7 +123,7 @@ A prioridade é derivada a cada requisição e nunca persistida, então nenhuma 
 **Testes das regras críticas:**
 
 - `packages/domain`: transições, motivo de perda, invariante de orçamento, atenção, plano de follow-up e datas de calendário.
-- `apps/api/test/follow-up.test.ts` (integração com Postgres): lembretes do dia 15/10, idempotência sequencial e concorrente, encerramento por contato e por perda, contato antigo que mantém o lembrete, e o avanço de data para 17/10.
+- `apps/api/test/follow-up.test.ts` (integração com Postgres): cadastro com contato inicial registrado no histórico e rejeição de contato futuro; lembretes do dia 15/10, idempotência sequencial e concorrente, encerramento por contato e por perda, contato antigo que mantém o lembrete, e o avanço de data para 17/10.
 
 ### Lembrete é notificação, não uma seção
 
