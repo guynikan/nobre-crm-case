@@ -40,6 +40,23 @@ describe.skipIf(!url)("follow-up automation (PostgreSQL)", () => {
     expect(await openCodes()).toEqual(["OPP-2002", "OPP-2003", "OPP-2004"]);
   });
 
+  // openCodes sorts, so it cannot see order. This is what stops the list from drifting
+  // back to "longest silence first", which would contradict how the board is ranked.
+  it("lists open reminders by urgency gate, not by how long the silence is", async () => {
+    await followUp.run();
+    const open = await followUp.list({ status: "OPEN" });
+
+    // 2003 has the client event in three days, so it leads despite only two days of silence.
+    // 2004 and 2002 both carry an expired proposal, and there the longer silence breaks the tie.
+    expect(open.map((reminder) => reminder.opportunityCode)).toEqual(["OPP-2003", "OPP-2004", "OPP-2002"]);
+    expect(open.map((reminder) => reminder.priority)).toEqual([
+      "EVENT_IMMINENT",
+      "PROPOSAL_EXPIRED",
+      "PROPOSAL_EXPIRED",
+    ]);
+    expect(open.map((reminder) => reminder.daysSinceLastContact)).toEqual([2, 13, 9]);
+  });
+
   it("is idempotent: a second run, sequential or concurrent, creates nothing", async () => {
     await followUp.run();
     expect(await followUp.run()).toMatchObject({ created: 0, resolved: 0, open: 3 });
