@@ -33,7 +33,7 @@ export function DraggableCard({
         aria-roledescription={isFinal ? undefined : "card arrastável"}
         aria-label={`${opportunity.code} ${opportunity.companyName}`}
         onClick={() => onOpen(opportunity.id)}
-        className={`${cardClasses(opportunity)} ${isFinal ? "cursor-pointer" : "cursor-grab"} transition hover:border-nobre-500/60 ${isDragging ? "opacity-30" : ""} ${isMoving ? "animate-pulse" : ""}`}
+        className={`${cardClasses(opportunity)} ${isFinal ? "cursor-pointer select-none" : "cursor-grab"} transition hover:border-nobre-500/60 ${isDragging ? "opacity-30" : ""} ${isMoving ? "animate-pulse" : ""}`}
       >
         <OpportunityCardBody opportunity={opportunity} today={today} />
       </article>
