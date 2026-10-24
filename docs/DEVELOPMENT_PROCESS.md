@@ -89,7 +89,7 @@ Quando as colunas não cabem na viewport, o quadro rola na horizontal em vez de 
 
 A alternativa considerada foi reduzir a largura das colunas conforme a viewport, o que elimina a rolagem mas aperta o conteúdo do card. Optou-se por manter a largura e sinalizar a rolagem: as bordas do quadro recebem um gradiente que aparece apenas do lado que ainda esconde conteúdo e some ao chegar no início ou no fim. O gradiente é decorativo (`aria-hidden`, sem captura de ponteiro), portanto não interfere no arrastar e soltar nem na leitura por leitores de tela.
 
-O arquivo do quadro passou a concentrar responsabilidades demais: orquestração de drag and drop, medição de rolagem e dois componentes de apresentação no mesmo módulo. Ele foi dividido em `board.tsx`, que mantém apenas o `DndContext`, as regras de movimento e o overlay, mais `board-column.tsx` e `draggable-card.tsx`.
+O quadro está dividido em três módulos: `board.tsx` guarda apenas o `DndContext`, as regras de movimento e o overlay, enquanto a coluna e o card vivem em `board-column.tsx` e `draggable-card.tsx`.
 
 A divisão seguiu o motivo de mudança, não o tamanho do arquivo. A medição de rolagem virou um componente genérico em `shared/ui/scroll-fade.tsx`, porque nada nela é específico do funil e outra lista horizontal poderia reaproveitá-la. Coluna e card ficaram em `features/pipeline`, já que dependem do estado do arrasto e dos rótulos de etapa, e promovê-los a compartilhados só criaria acoplamento sem reuso real.
 
