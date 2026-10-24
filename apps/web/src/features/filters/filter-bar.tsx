@@ -147,7 +147,7 @@ function SellerSelect({
   };
 
   return (
-    <div ref={rootRef} className="relative w-52 shrink-0">
+    <div ref={rootRef} className="relative w-60 max-w-full shrink-0">
       <button
         ref={triggerRef}
         id="seller"
@@ -157,10 +157,10 @@ function SellerSelect({
         aria-controls={open ? "seller-options" : undefined}
         disabled={disabled}
         onClick={() => setOpen((current) => !current)}
-        className="flex h-10 w-full items-center gap-2 rounded-md border border-line bg-white px-2.5 text-left text-sm transition-colors hover:border-nobre-500 focus:border-nobre-500 focus:outline-none disabled:cursor-wait disabled:opacity-60"
+        className="flex min-h-10 w-full items-center gap-2 rounded-md border border-line bg-white px-2.5 py-1.5 text-left text-sm transition-colors hover:border-nobre-500 focus:border-nobre-500 focus:outline-none disabled:cursor-wait disabled:opacity-60"
       >
         <SellerAvatar name={selectedSeller?.name} />
-        <span className="min-w-0 flex-1 truncate text-ink">
+        <span className="min-w-0 flex-1 break-words text-ink">
           {disabled ? "Carregando vendedores" : selectedSeller?.name ?? "Todos os vendedores"}
         </span>
         <svg
@@ -178,7 +178,7 @@ function SellerSelect({
           id="seller-options"
           role="group"
           aria-label="Opções de vendedor"
-          className="absolute top-full left-0 z-30 mt-2 w-64 max-w-[calc(100vw-2rem)] rounded-lg border border-line bg-panel p-2 shadow-lg shadow-ink/10"
+          className="absolute top-full left-0 z-30 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-lg border border-line bg-panel p-2 shadow-lg shadow-ink/10"
         >
           <div className="px-2 pb-2 pt-1">
             <p className="text-[11px] font-semibold tracking-[0.12em] text-muted uppercase">Filtrar por vendedor</p>
@@ -227,7 +227,7 @@ function SellerOption({
       }`}
     >
       <SellerAvatar name={allSellers ? undefined : label} allSellers={allSellers} />
-      <span className="min-w-0 flex-1 truncate">{label}</span>
+      <span className="min-w-0 flex-1 break-words">{label}</span>
       {selected ? (
         <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-4 shrink-0 text-nobre-700">
           <path d="m4 10 4 4 8-8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
