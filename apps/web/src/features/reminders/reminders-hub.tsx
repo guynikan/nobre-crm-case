@@ -36,8 +36,12 @@ export function RemindersHub({ onNavigate }: { onNavigate: () => void }) {
     <div className="flex max-h-[32rem] w-[26rem] max-w-[calc(100vw-2rem)] flex-col text-ink">
       <header className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
         <div>
-          <h2 className="text-sm font-semibold">Follow-up automático</h2>
-          <p className="text-xs text-muted">Criado sozinho para quem está sem contato há 2 dias ou mais.</p>
+          <h2 className="text-sm font-semibold">Follow-up</h2>
+          <p className="text-xs text-muted">
+            {status === "OPEN"
+              ? "Retome o contato de cima para baixo: a ordem é a do risco de perder a venda."
+              : "Encerrados quando o contato foi registrado ou a venda terminou."}
+          </p>
         </div>
         <Button onClick={runNow} disabled={run.isPending}>
           {run.isPending ? "Verificando…" : "Verificar agora"}
