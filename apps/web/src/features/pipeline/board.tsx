@@ -31,6 +31,7 @@ interface BoardProps {
   today: CalendarDate;
   thresholdDays: number;
   onOpen: (id: string) => void;
+  onCreate: () => void;
 }
 
 /** Why a drop is refused, in the seller's words. The API still validates every move. */
@@ -47,7 +48,7 @@ const announcements = (byId: Map<string, Opportunity>): Announcements => ({
   onDragCancel: () => "Movimento cancelado.",
 });
 
-export function PipelineBoard({ opportunities, today, thresholdDays, onOpen }: BoardProps) {
+export function PipelineBoard({ opportunities, today, thresholdDays, onOpen, onCreate }: BoardProps) {
   const move = useMoveStage();
   const toast = useToast();
   const [active, setActive] = useState<Opportunity | null>(null);
@@ -133,6 +134,18 @@ export function PipelineBoard({ opportunities, today, thresholdDays, onOpen }: B
             stage={stage}
             opportunities={byStage.get(stage) ?? []}
             dropState={dropStateFor(stage)}
+            leadingAction={stage === "FIRST_CONTACT" ? (
+              <button
+                type="button"
+                onClick={onCreate}
+                className="flex w-full items-center gap-2 rounded-md border border-dashed border-nobre-700/30 px-3 py-2 text-left text-xs font-medium text-nobre-700 transition-colors hover:border-nobre-500 hover:bg-nobre-100/60 focus-visible:border-nobre-500"
+              >
+                <span aria-hidden="true" className="flex size-5 items-center justify-center rounded-full bg-nobre-100 text-sm leading-none">
+                  +
+                </span>
+                Adicionar oportunidade
+              </button>
+            ) : null}
           >
             {(byStage.get(stage) ?? []).map((opportunity) => (
               <DraggableCard

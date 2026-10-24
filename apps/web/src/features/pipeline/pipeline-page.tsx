@@ -3,7 +3,6 @@
 import { lazy, Suspense, useDeferredValue, useState } from "react";
 import { errorMessage } from "@/shared/api/client";
 import { useMeta } from "@/shared/api/queries";
-import { Button } from "@/shared/ui/fields";
 import { EmptyState, ErrorState, Skeleton, Spinner } from "@/shared/ui/states";
 import { FilterBar } from "../filters/filter-bar";
 import { useOpportunityFilters } from "../filters/use-opportunity-filters";
@@ -33,19 +32,14 @@ export function PipelinePage() {
     className="flex h-[calc(100vh-2.75rem)] flex-col">
       <div className="space-y-3 px-6 py-4">
         <FilterBar filters={filters} view={view} update={update} hasActiveFilters={hasActiveFilters} />
-        <div className="flex min-h-10 items-center justify-between gap-3 text-sm text-muted" aria-live="polite">
-          <div className="flex min-w-0 items-center gap-3">
-            {list.data ? (
-              <span>
-                {list.data.total === 1 ? "1 oportunidade" : `${list.data.total} oportunidades`}
-                {list.data.total > BOARD_PAGE_SIZE ? ` (exibindo as ${BOARD_PAGE_SIZE} mais urgentes)` : ""}
-              </span>
-            ) : null}
-            {isStale || list.isFetching ? <Spinner label="Atualizando" /> : null}
-          </div>
-          <Button className="shrink-0" onClick={() => setCreateOpen(true)}>
-            <span aria-hidden="true">+</span> Nova oportunidade
-          </Button>
+        <div className="flex h-5 items-center gap-3 text-sm text-muted" aria-live="polite">
+          {list.data ? (
+            <span>
+              {list.data.total === 1 ? "1 oportunidade" : `${list.data.total} oportunidades`}
+              {list.data.total > BOARD_PAGE_SIZE ? ` (exibindo as ${BOARD_PAGE_SIZE} mais urgentes)` : ""}
+            </span>
+          ) : null}
+          {isStale || list.isFetching ? <Spinner label="Atualizando" /> : null}
         </div>
       </div>
 
@@ -61,7 +55,7 @@ export function PipelinePage() {
         </div>
       ) : !meta.data || !list.data ? (
         <BoardSkeleton />
-      ) : list.data.data.length === 0 ? (
+      ) : list.data.data.length === 0 && (view === "list" || hasActiveFilters) ? (
         <div className="px-6">
           <EmptyState title={hasActiveFilters ? "Nenhuma oportunidade com esses filtros" : "Nenhuma oportunidade cadastrada"}>
             {hasActiveFilters ? "Ajuste a busca ou limpe os filtros para ver o funil completo." : "Rode o seed do banco (pnpm db:seed)."}
@@ -75,6 +69,7 @@ export function PipelinePage() {
               today={meta.data.today}
               thresholdDays={meta.data.attentionThresholdDays}
               onOpen={open}
+              onCreate={() => setCreateOpen(true)}
             />
           ) : (
             <OpportunityTable opportunities={list.data.data} today={meta.data.today} onOpen={open} />

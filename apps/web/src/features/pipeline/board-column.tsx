@@ -13,11 +13,13 @@ export function BoardColumn({
   stage,
   opportunities,
   dropState,
+  leadingAction,
   children,
 }: {
   stage: Stage;
   opportunities: Opportunity[];
   dropState: DropState;
+  leadingAction?: ReactNode;
   children: ReactNode;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage });
@@ -48,6 +50,7 @@ export function BoardColumn({
         {dropState === "blocked" ? <p className="mt-1 text-xs text-muted">Destino não permitido</p> : null}
       </header>
       <div className="flex min-h-24 flex-1 flex-col gap-2 overflow-y-auto p-2">
+        {leadingAction}
         {opportunities.length === 0 ? (
           <p className="px-1 py-4 text-center text-xs text-muted">Nenhuma oportunidade nesta etapa</p>
         ) : (
